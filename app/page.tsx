@@ -1,4 +1,4 @@
-// app/page.tsx
+// app/page.tsx の先頭インポートをこうする
 import Link from 'next/link';
 import { gql } from '@/lib/wp';
 import ArticleList from '@/components/ArticleList';
