@@ -102,8 +102,6 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
           const img = p.featuredImage?.node?.sourceUrl || null;
           const alt = p.featuredImage?.node?.altText ?? p.title ?? 'post';
           const isActive = i === index;
-
-          // 記事ページ（WPPost には externalUrl は無い想定）
           const href = p.slug ? `/posts/${p.slug}` : '#';
 
           return (
