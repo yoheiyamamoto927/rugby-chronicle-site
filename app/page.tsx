@@ -1,65 +1,239 @@
-import Image from "next/image";
+// app/page.tsx
+import Link from 'next/link';
+import { gql } from '@/lib/wp';
+import ArticleList, { WPPost } from '@/components/ArticleList';
+import HeroSlider, { SlidePost } from '@/components/HeroSlider';
+import LeftRail from '@/components/LeftRail';
+import { LineChart } from 'lucide-react';
+import { POSTS_BY_SLUGS } from '@/lib/queries';
 
-export default function Home() {
+
+// キャッシュ無効（?page= で確実に切り替える）
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+// ★ここに好きな順番で“固定表示したい記事のスラッグ”を並べる
+const CURATED_RANKING_SLUGS = [
+  // 例：'2025関西大学ラグビー…'などの日本語はNG。必ず「投稿スラッグ（英数字とハイフン）」にしてください。
+  'meijitukuba',
+  'kiji-b',
+  'kijid',
+  'hello-world',
+  // 必要に応じて追加
+];
+
+
+// ===== 一覧取得：offsetPagination を使わず「必要件数ぶん first」で取る =====
+const POSTS_BY_COUNT = /* GraphQL */ `
+  query PostsByCount($count: Int = 10) {
+    posts(
+      first: $count
+      where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
+    ) {
+      nodes {
+        id
+        slug
+        title
+        date
+        excerpt
+        featuredImage { node { sourceUrl altText } }
+        views
+      }
+      pageInfo { hasNextPage }
+    }
+  }
+`;
+
+// スライダーは常に最新5件
+const SLIDES_QUERY = /* GraphQL */ `
+  query SlidePosts {
+    posts(
+      first: 5
+      where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
+    ) {
+      nodes {
+        id
+        slug
+        title
+        date
+        excerpt
+        featuredImage { node { sourceUrl altText } }
+      }
+    }
+  }
+`;
+
+type Search = { page?: string };
+type CountResp = { posts: { nodes: WPPost[]; pageInfo: { hasNextPage: boolean } } };
+type SlidesResp = { posts: { nodes: WPPost[] } };
+
+export default async function Page(props: {
+  searchParams?: Search | Promise<Search>;
+}) {
+  const sp =
+    props.searchParams instanceof Promise
+      ? await props.searchParams
+      : props.searchParams ?? {};
+
+  const PAGE_SIZE = 10;
+  const currentPage = Math.max(1, Number(sp.page ?? 1));
+  const count = currentPage * PAGE_SIZE;
+
+  // 現在ページに必要な件数だけ取得 → 末尾 PAGE_SIZE 件を表示
+  const listData = await gql<CountResp>(POSTS_BY_COUNT, { count });
+  const allFetched = listData.posts?.nodes ?? [];
+  const start = (currentPage - 1) * PAGE_SIZE;
+const end   = start + PAGE_SIZE;
+const pagePosts = allFetched.slice(start, end);
+
+
+  const hasNext = !!listData.posts?.pageInfo?.hasNextPage;
+  const totalPages = hasNext ? currentPage + 1 : currentPage;
+
+  // スライダー（最新5件）
+  const slideData = await gql<SlidesResp>(SLIDES_QUERY);
+  const slides: SlidePost[] = (slideData.posts?.nodes ?? []).slice(0, 5);
+
+  // ===== 固定ランキングの取得＆整列 =====
+  const curatedResp = await gql<{ posts: { nodes: WPPost[] } }>(POSTS_BY_SLUGS, {
+    slugs: CURATED_RANKING_SLUGS as unknown as string[],
+  });
+  const curatedNodes = curatedResp.posts?.nodes ?? [];
+  const curatedRanking: WPPost[] = CURATED_RANKING_SLUGS
+    .map((slug) => curatedNodes.find((p) => p.slug === slug))
+    .filter((p): p is WPPost => Boolean(p))
+    .slice(0, 5);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-white text-neutral-900">
+      {/* トップ：スライダー */}
+      <HeroSlider posts={slides} />
+
+      {/* 本文＋左レール */}
+      <section className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 py-12">
+            <LeftRail />
+
+            <div className="lg:col-span-9">
+              {/* 最新記事（ページごとに変わる） */}
+              <section className="pb-14 border-b border-neutral-200">
+                <div className="flex flex-col items-center text-center mb-10">
+                  <LineChart className="h-6 w-6 text-neutral-400 mb-2" />
+                  <h2 className="text-2xl font-serif font-semibold text-neutral-900">
+                    最新記事
+                  </h2>
+                  <p className="mt-2 text-sm text-neutral-600 max-w-xl">
+                    戦術・データ・文化を横断して読む、UNIVERSIS の新着コンテンツ。
+                  </p>
+                </div>
+
+                <div key={`page-${currentPage}`}>
+                  <ArticleList posts={pagePosts} />
+                </div>
+
+                <Pager current={currentPage} totalPages={totalPages} />
+              </section>
+
+              {/* RANKING：どのページでも固定表示 */}
+              <section className="py-16 border-b border-neutral-200">
+                <h2 className="text-3xl font-extrabold tracking-tight text-neutral-900 mb-8">
+                  RANKING
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                  {curatedRanking.map((post, i) => (
+                    <Link
+                      key={post.id}
+                      href={`/posts/${post.slug}`}
+                      className="flex flex-col group"
+                      prefetch
+                    >
+                      <div className="relative mb-3">
+                        <span className="absolute -top-2 -left-2 text-6xl font-extrabold text-amber-400/90 z-10">
+                          {i + 1}
+                        </span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={post.featuredImage?.node?.sourceUrl || '/noimage.jpg'}
+                          alt={post.featuredImage?.node?.altText || post.title}
+                          className="w-full h-40 object-cover rounded transition duration-300 group-hover:opacity-90"
+                          loading="lazy"
+                        />
+                      </div>
+                      <h3 className="text-sm font-semibold leading-snug mb-2 line-clamp-2">
+                        {post.title}
+                      </h3>
+                      <p className="text-xs text-neutral-500">
+                        {new Date(post.date).toLocaleDateString('ja-JP')}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+
+              {/* 告知ブロック */}
+              <section className="py-20 bg-neutral-950 text-white text-center border-t border-neutral-800">
+                <div className="mx-auto max-w-3xl px-6">
+                  <p className="text-sm text-neutral-400 tracking-wide mb-4">
+                    Presented by <span className="font-semibold text-white">UNIVERSIS</span>
+                  </p>
+                  <h2 className="text-3xl sm:text-4xl font-serif font-semibold mb-4">
+                    分析と戦略をチームに。<br className="sm:hidden" /> Rugby Analyzer
+                  </h2>
+                  <p className="text-neutral-300 text-sm sm:text-base leading-relaxed">
+                    UNIVERSISが運営するアマチュア・大学・高校チーム向けの
+                    <br />
+                    分析・スカウティング支援プラットフォーム。
+                  </p>
+                  <a
+                    href="https://sportsconnect-lab.github.io/rugby-analyzer-site/#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-8 px-8 py-3 rounded-full bg-white text-neutral-900 font-semibold hover:bg-neutral-200 transition"
+                  >
+                    Rugby Analyzer サイトを見る →
+                  </a>
+                </div>
+              </section>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
     </div>
+  );
+}
+
+// ページャ（1 … current-1 current current+1 … last）
+function Pager({ current, totalPages }: { current: number; totalPages: number }) {
+  if (totalPages <= 1) return null;
+  const pages = new Set<number>([1, totalPages, current]);
+  if (current - 1 >= 1) pages.add(current - 1);
+  if (current + 1 <= totalPages) pages.add(current + 1);
+  const ordered = [...pages].sort((a, b) => a - b);
+
+  return (
+    <nav className="mt-8 flex items-center gap-2">
+      {ordered.map((p, i) => {
+        const prev = ordered[i - 1];
+        const dots = prev !== undefined && p - prev > 1;
+        return (
+          <span key={p} className="flex items-center">
+            {dots && <span className="px-1 text-neutral-400">…</span>}
+            <Link
+              href={p === 1 ? '/' : `/?page=${p}`}
+              className={`inline-flex h-9 min-w-9 items-center justify-center rounded-md border px-3 text-sm ${
+                p === current
+                  ? 'bg-neutral-900 text-white border-neutral-900'
+                  : 'bg-white text-neutral-800 border-neutral-300 hover:bg-neutral-50'
+              }`}
+              prefetch
+            >
+              {p}
+            </Link>
+          </span>
+        );
+      })}
+    </nav>
   );
 }

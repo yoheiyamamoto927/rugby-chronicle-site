@@ -24,3 +24,171 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ---- WordPress content baseline ---- */
+.wp-content {
+  font-size: 16px;        /* WPに近いベース */
+  color: rgb(23 23 23);   /* neutral-900 相当 */
+}
+
+/* 段落 */
+.wp-content p {
+  margin: 1em 0;
+}
+
+/* 見出し（WPのデフォルトに寄せた控えめサイズ） */
+.wp-content h1 { font-size: 1.75rem; line-height: 1.3; margin: 2rem 0 1rem; font-weight: 700; }
+.wp-content h2 { font-size: 1.5rem;  line-height: 1.35; margin: 2rem 0 1rem; font-weight: 700; }
+.wp-content h3 { font-size: 1.25rem; line-height: 1.4;  margin: 1.5rem 0 .75rem; font-weight: 700; }
+.wp-content h4 { font-size: 1.125rem;line-height: 1.45; margin: 1.25rem 0 .5rem; font-weight: 700; }
+
+/* 太字・斜体はWPのHTMLそのままに */
+.wp-content b,
+.wp-content strong { font-weight: 700; }
+.wp-content em,
+.wp-content i { font-style: italic; }
+
+/* リンク */
+.wp-content a {
+  color: rgb(37 99 235);          /* blue-600 */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* 画像・図版 */
+.wp-content img { max-width: 100%; height: auto; }
+.wp-content figure { margin: 1.25rem 0; }
+.wp-content figcaption { font-size: .875rem; color: rgb(82 82 82); text-align: center; margin-top: .5rem; }
+
+/* リスト */
+.wp-content ul, .wp-content ol { margin: 1em 0 1em 1.5em; }
+.wp-content ul { list-style: disc; }
+.wp-content ol { list-style: decimal; }
+
+/* 引用 */
+.wp-content blockquote {
+  border-left: 4px solid rgb(229 231 235);
+  padding-left: 1rem;
+  color: rgb(82 82 82);
+  margin: 1rem 0;
+}
+
+/* 表 */
+.wp-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+.wp-content th, .wp-content td { border: 1px solid rgb(229 231 235); padding: .5rem .75rem; }
+
+/* Gutenberg よくあるクラスの簡易対応 */
+.wp-content .aligncenter { text-align: center; }
+.wp-content .alignright  { text-align: right; }
+.wp-content .alignleft   { text-align: left; }
+.wp-content .has-text-align-center { text-align: center; }
+.wp-content .has-text-align-right  { text-align: right; }
+.wp-content .has-text-align-left   { text-align: left; }
+
+/* 余白が詰みすぎるのを防ぐ */
+.wp-content > *:first-child { margin-top: 0; }
+.wp-content > *:last-child  { margin-bottom: 0; }
+
+/* ========== WordPress style restore ========== */
+@layer utilities {
+  .wp-content {
+    font-size: 16px !important;
+    color: #171717 !important;
+    line-height: 1.9 !important;
+    word-break: break-word;
+  }
+
+  /* 段落 */
+  .wp-content p { margin: 1em 0 !important; }
+
+  /* 見出し */
+  .wp-content h1 {
+    font-size: 1.75rem !important;
+    line-height: 1.3 !important;
+    font-weight: 700 !important;
+    margin: 2rem 0 1rem !important;
+  }
+  .wp-content h2 {
+    font-size: 1.5rem !important;
+    line-height: 1.35 !important;
+    font-weight: 700 !important;
+    margin: 2rem 0 1rem !important;
+  }
+  .wp-content h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.4 !important;
+    font-weight: 700 !important;
+    margin: 1.5rem 0 0.75rem !important;
+  }
+
+  /* 太字 */
+  .wp-content b,
+  .wp-content strong { font-weight: 700 !important; }
+
+  /* 斜体 */
+  .wp-content em,
+  .wp-content i { font-style: italic !important; }
+
+  /* リンク */
+  .wp-content a {
+    color: #2563eb !important; /* blue-600 */
+    text-decoration: underline !important;
+    text-underline-offset: 2px !important;
+  }
+
+  /* リスト */
+  .wp-content ul, .wp-content ol {
+    margin: 1em 0 1em 1.5em !important;
+  }
+  .wp-content ul { list-style: disc !important; }
+  .wp-content ol { list-style: decimal !important; }
+
+  /* 引用 */
+  .wp-content blockquote {
+    border-left: 4px solid #e5e7eb !important;
+    padding-left: 1rem !important;
+    color: #525252 !important;
+    margin: 1rem 0 !important;
+  }
+
+  /* 画像 */
+  .wp-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 4px;
+  }
+
+  /* Gutenberg alignment クラス */
+  .wp-content .aligncenter,
+  .wp-content .has-text-align-center { text-align: center !important; }
+  .wp-content .alignright,
+  .wp-content .has-text-align-right { text-align: right !important; }
+  .wp-content .alignleft,
+  .wp-content .has-text-align-left { text-align: left !important; }
+
+  /* 表 */
+  .wp-content table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 1rem 0 !important;
+  }
+  .wp-content th, .wp-content td {
+    border: 1px solid #e5e7eb !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+@layer utilities {
+  /* アンカー見出しの上に余白（固定ヘッダー分） */
+  .wp-content [id] { scroll-margin-top: 96px; }
+}
+/* globals.css などに追記（prose の太字を弱める or 無効化） */
+.prose strong,
+.prose b {
+  font-weight: 600; /* 既定より少し軽め（完全に無効化したいなら 500～normal に） */
+}
+
+/* app/globals.css */
+body {
+  font-family: "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
+}
