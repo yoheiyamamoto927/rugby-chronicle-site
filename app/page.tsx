@@ -1,15 +1,12 @@
 // app/page.tsx
 import Link from 'next/link';
 import { gql } from '@/lib/wp';
-import ArticleList, { WPPost } from '@/components/ArticleList';
-import HeroSlider, { SlidePost } from '@/components/HeroSlider';
+import ArticleList from '@/components/ArticleList';
+import HeroSlider from '@/components/HeroSlider';
 import LeftRail from '@/components/LeftRail';
 import { LineChart } from 'lucide-react';
 import { POSTS_BY_SLUGS } from '@/lib/queries';
 import type { WPPost } from '@/ts/wp';
-
-
-
 
 // キャッシュ無効（?page= で確実に切り替える）
 export const dynamic = 'force-dynamic';
@@ -24,7 +21,6 @@ const CURATED_RANKING_SLUGS = [
   'hello-world',
   // 必要に応じて追加
 ];
-
 
 // ===== 一覧取得：offsetPagination を使わず「必要件数ぶん first」で取る =====
 const POSTS_BY_COUNT = /* GraphQL */ `
@@ -86,28 +82,28 @@ export default async function Page(props: {
   const listData = await gql<CountResp>(POSTS_BY_COUNT, { count });
   const allFetched = listData.posts?.nodes ?? [];
   const start = (currentPage - 1) * PAGE_SIZE;
-const end   = start + PAGE_SIZE;
-const pagePosts = allFetched.slice(start, end);
-
+  const end = start + PAGE_SIZE;
+  const pagePosts = allFetched.slice(start, end);
 
   const hasNext = !!listData.posts?.pageInfo?.hasNextPage;
   const totalPages = hasNext ? currentPage + 1 : currentPage;
 
   // スライダー（最新5件）
-const slideData = await gql<SlidesResp>(SLIDES_QUERY);
+  const slideData = await gql<SlidesResp>(SLIDES_QUERY);
 
-// WPPost[] 前提で null/undefined を除去して安全化
-const slides: WPPost[] = (slideData?.posts?.nodes ?? [])
-  .filter((p): p is WPPost => Boolean(p));
-
+  // WPPost[] 前提で null/undefined を除去して安全化
+  const slides: WPPost[] = (slideData?.posts?.nodes ?? []).filter(
+    (p): p is WPPost => Boolean(p)
+  );
 
   // ===== 固定ランキングの取得＆整列 =====
   const curatedResp = await gql<{ posts: { nodes: WPPost[] } }>(POSTS_BY_SLUGS, {
     slugs: CURATED_RANKING_SLUGS as unknown as string[],
   });
   const curatedNodes = curatedResp.posts?.nodes ?? [];
-  const curatedRanking: WPPost[] = CURATED_RANKING_SLUGS
-    .map((slug) => curatedNodes.find((p) => p.slug === slug))
+  const curatedRanking: WPPost[] = CURATED_RANKING_SLUGS.map(
+    (slug) => curatedNodes.find((p) => p.slug === slug)
+  )
     .filter((p): p is WPPost => Boolean(p))
     .slice(0, 5);
 
@@ -162,8 +158,12 @@ const slides: WPPost[] = (slideData?.posts?.nodes ?? [])
                         </span>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={post.featuredImage?.node?.sourceUrl || '/noimage.jpg'}
-                          alt={post.featuredImage?.node?.altText || post.title}
+                          src={
+                            post.featuredImage?.node?.sourceUrl || '/noimage.jpg'
+                          }
+                          alt={
+                            post.featuredImage?.node?.altText || post.title || ''
+                          }
                           className="w-full h-40 object-cover rounded transition duration-300 group-hover:opacity-90"
                           loading="lazy"
                         />
@@ -183,10 +183,12 @@ const slides: WPPost[] = (slideData?.posts?.nodes ?? [])
               <section className="py-20 bg-neutral-950 text-white text-center border-t border-neutral-800">
                 <div className="mx-auto max-w-3xl px-6">
                   <p className="text-sm text-neutral-400 tracking-wide mb-4">
-                    Presented by <span className="font-semibold text-white">UNIVERSIS</span>
+                    Presented by{' '}
+                    <span className="font-semibold text-white">UNIVERSIS</span>
                   </p>
                   <h2 className="text-3xl sm:text-4xl font-serif font-semibold mb-4">
-                    分析と戦略をチームに。<br className="sm:hidden" /> Rugby Analyzer
+                    分析と戦略をチームに。<br className="sm:hidden" /> Rugby
+                    Analyzer
                   </h2>
                   <p className="text-neutral-300 text-sm sm:text-base leading-relaxed">
                     UNIVERSISが運営するアマチュア・大学・高校チーム向けの
@@ -212,7 +214,13 @@ const slides: WPPost[] = (slideData?.posts?.nodes ?? [])
 }
 
 // ページャ（1 … current-1 current current+1 … last）
-function Pager({ current, totalPages }: { current: number; totalPages: number }) {
+function Pager({
+  current,
+  totalPages,
+}: {
+  current: number;
+  totalPages: number;
+}) {
   if (totalPages <= 1) return null;
   const pages = new Set<number>([1, totalPages, current]);
   if (current - 1 >= 1) pages.add(current - 1);
