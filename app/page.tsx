@@ -6,6 +6,9 @@ import HeroSlider, { SlidePost } from '@/components/HeroSlider';
 import LeftRail from '@/components/LeftRail';
 import { LineChart } from 'lucide-react';
 import { POSTS_BY_SLUGS } from '@/lib/queries';
+import type { WPPost } from '@/ts/wp';
+
+
 
 
 // キャッシュ無効（?page= で確実に切り替える）
@@ -91,8 +94,11 @@ const pagePosts = allFetched.slice(start, end);
   const totalPages = hasNext ? currentPage + 1 : currentPage;
 
   // スライダー（最新5件）
-  const slideData = await gql<SlidesResp>(SLIDES_QUERY);
-  const slides = slideData?.posts?.nodes || []
+const slideData = await gql<SlidesResp>(SLIDES_QUERY);
+
+// WPPost[] 前提で null/undefined を除去して安全化
+const slides: WPPost[] = (slideData?.posts?.nodes ?? [])
+  .filter((p): p is WPPost => Boolean(p));
 
 
   // ===== 固定ランキングの取得＆整列 =====

@@ -4,20 +4,10 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-export type SlidePost = {
-  id: string;
-  slug?: string;
-  title: string;
-  featuredImage?: { node?: { sourceUrl: string; altText: string } };
-  // 追加: サービス訴求用
-  externalUrl?: string;   // 外部LPへのリンクを直接指定
-  subtitle?: string;      // サブコピー
-  ctaLabel?: string;      // 例: "無料相談 / 見積り"
-};
+import type { WPPost } from '@/ts/wp'; // ★ 追加：WPPost型を使用
 
 type Props = {
-  posts: SlidePost[];
+  posts: WPPost[];        // ★ SlidePost[] → WPPost[] に統一
   intervalMs?: number;
 };
 
@@ -81,7 +71,7 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
       const dx = e.touches[0].clientX - startX;
       if (Math.abs(dx) > 50) {
         go(index + (dx < 0 ? 1 : -1));
-        startX = e.touches[0].clientX; // 連続操作を滑らかに
+        startX = e.touches[0].clientX;
       }
     };
     el?.addEventListener('touchstart', onStart);
@@ -109,16 +99,16 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
         style={{ transform: `translateX(${-index * 100}%)` }}
       >
         {posts.map((p, i) => {
-          const img = p.featuredImage?.node?.sourceUrl;
-          const alt = p.featuredImage?.node?.altText ?? p.title;
+          const img = p.featuredImage?.node?.sourceUrl || null;
+          const alt = p.featuredImage?.node?.altText ?? p.title ?? 'post';
           const isActive = i === index;
 
-          // クリック先: 外部URL > 記事ページ
-          const href = p.externalUrl ?? (p.slug ? `/posts/${p.slug}` : '#');
+          // 記事ページ（WPPost には externalUrl は無い想定）
+          const href = p.slug ? `/posts/${p.slug}` : '#';
 
           return (
             <div
-              key={`${p.id}-${i}`}
+              key={`${p.id ?? p.slug ?? i}-${i}`}
               className="relative min-w-full h-full"
               aria-hidden={!isActive}
             >
@@ -139,22 +129,10 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
               <div className="absolute bottom-6 left-6 right-6">
                 <div className="max-w-3xl">
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-sans">
-                    {p.title}
+                    {p.title ?? ''}
                   </h2>
-                  {p.subtitle && (
-                    <p className="mt-2 text-neutral-200 text-sm sm:text-base drop-shadow">
-                      {p.subtitle}
-                    </p>
-                  )}
 
-                  {p.externalUrl ? (
-                    <a
-                      href={href}
-                      className="inline-flex mt-4 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                    >
-                      {p.ctaLabel ?? '無料相談 / 見積り'}
-                    </a>
-                  ) : p.slug ? (
+                  {p.slug ? (
                     <Link
                       href={href}
                       className="inline-flex mt-4 rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-white"
