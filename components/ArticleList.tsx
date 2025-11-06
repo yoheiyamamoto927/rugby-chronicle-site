@@ -8,6 +8,12 @@ const ORIGIN =
   (typeof window === 'undefined'
     ? process.env.NEXT_PUBLIC_WP_ORIGIN
     : process.env.NEXT_PUBLIC_WP_ORIGIN) || 'http://localhost:8080';
+// 追加：安全に日付を 'ja-JP' で表示
+const formatJPDate = (iso?: string | null) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('ja-JP');
+};
 
 /** 相対URLを絶対URLに正規化 */
 function toAbs(url?: string | null): string | null {
@@ -68,10 +74,11 @@ export default function ArticleList({ posts }: Props) {
             {/* テキスト */}
             <div className="sm:col-span-7 flex min-w-0 flex-col justify-center">
               {p.date && (
-                <time className="mb-2 block text-sm text-neutral-500" dateTime={p.date}>
-                  {new Date(p.date).toLocaleDateString('ja-JP')}
-                </time>
-              )}
+  <time className="mb-2 block text-sm text-neutral-500" dateTime={p.date}>
+    {formatJPDate(p.date)}
+  </time>
+)}
+
               <h3 className="mb-2 line-clamp-2 text-2xl font-serif font-semibold text-neutral-900">
                 <Link href={`/posts/${p.slug}`} prefetch>
                   {p.title}

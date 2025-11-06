@@ -67,6 +67,13 @@ type Search = { page?: string };
 type CountResp = { posts: { nodes: WPPost[]; pageInfo: { hasNextPage: boolean } } };
 type SlidesResp = { posts: { nodes: WPPost[] } };
 
+// 追加：安全に日付を 'ja-JP' で表示
+const formatJPDate = (iso?: string | null) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('ja-JP');
+};
+
 export default async function Page(props: {
   searchParams?: Search | Promise<Search>;
 }) {
@@ -172,9 +179,10 @@ export default async function Page(props: {
                       <h3 className="text-sm font-semibold leading-snug mb-2 line-clamp-2">
                         {post.title}
                       </h3>
-                      <p className="text-xs text-neutral-500">
-                        {new Date(post.date).toLocaleDateString('ja-JP')}
-                      </p>
+                     <p className="text-xs text-neutral-500">
+  {formatJPDate(post.date)}
+</p>
+
                     </Link>
                   ))}
                 </div>
