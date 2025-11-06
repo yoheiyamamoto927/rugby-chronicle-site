@@ -5,18 +5,6 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { CATEGORY_LINKS, PAGE_LINKS } from '@/lib/routes';
-import { CATEGORIES } from '@/lib/nav';
-
-<ul className="space-y-4 text-lg">
-  {CATEGORIES.map(c => (
-    <li key={c.slug}>
-      <Link href={`/category/${c.slug}`} onClick={() => setOpen(false)} className="hover:underline">
-        {c.jp}
-      </Link>
-    </li>
-  ))}
-</ul>
-
 
 export default function GlobalMenu() {
   const [open, setOpen] = useState(false);
@@ -149,8 +137,6 @@ export default function GlobalMenu() {
                       </a>
                     </li>
                   </ul>
-
-                  
                 </nav>
               </div>
             </div>
