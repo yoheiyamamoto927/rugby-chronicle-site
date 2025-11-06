@@ -1,8 +1,8 @@
 // components/ShareRail.tsx
 'use client';
 
-import { cn } from '@/lib/utils'; // 無ければ下に簡易実装を記載
 import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
 
 type Props = {
   url: string;
@@ -65,9 +65,4 @@ export default function ShareRail({ url, title, className }: Props) {
       ))}
     </div>
   );
-}
-
-// 簡易 cn（utils が無ければこれを使ってOK）
-export function cn(...args: any[]) {
-  return args.filter(Boolean).join(' ');
 }
