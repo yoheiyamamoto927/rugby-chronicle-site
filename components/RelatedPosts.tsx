@@ -1,67 +1,70 @@
-import Image from 'next/image';
+// components/RelatedPosts.tsx
 import Link from 'next/link';
+import Image from 'next/image';
 import { gql } from '@/lib/wp';
-import { RELATED_POSTS } from '@/lib/queries';
+import type { WPPost } from '@/ts/wp';
 
-type Card = {
-  id: string;
-  slug: string;
-  title: string;
-  date: string;
-  featuredImage?: { node?: { sourceUrl: string; altText: string } };
+type Props = {
+  currentSlug?: string; // 現在表示中の記事の slug（除外用）
+  title?: string;       // セクション見出し（デフォルト "Related"）
+  count?: number;       // 取得件数（表示は currentSlug を除外して上位3件）
 };
 
+const RELATED_QUERY = /* GraphQL */ `
+  query RelatedPosts($count: Int = 6) {
+    posts(
+      first: $count
+      where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
+    ) {
+      nodes {
+        id
+        slug
+        title
+        date
+        featuredImage { node { sourceUrl altText } }
+      }
+    }
+  }
+`;
+
 export default async function RelatedPosts({
-  excludeId,
-  categoryIds,
-  title = '関連記事',
-}: {
-  excludeId: string;
-  categoryIds: number[];
-  title?: string;
-}) {
-  if (!categoryIds.length) return null;
+  currentSlug,
+  title = 'Related',
+  count = 6,
+}: Props) {
+  const resp = await gql<{ posts: { nodes: WPPost[] } }>(RELATED_QUERY, { count });
+  const all = resp?.posts?.nodes ?? [];
+  const posts = all.filter(p => p.slug !== currentSlug).slice(0, 3);
 
-  const data = await gql<{ posts: { nodes: Card[] } }>(RELATED_POSTS, {
-    catIn: categoryIds,
-    exclude: [excludeId],
-    first: 5,
-  });
-
-  const items = data.posts.nodes;
-  if (items.length === 0) return null;
+  if (posts.length === 0) return null;
 
   return (
-    <section className="mt-16">
-      <h3 className="mb-4 text-lg font-semibold text-neutral-900">{title}</h3>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((p) => {
-          const img = p.featuredImage?.node?.sourceUrl;
+    <section className="mt-10">
+      <h2 className="mb-4 text-lg font-semibold">{title}</h2>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        {posts.map((p) => {
+          const src = p.featuredImage?.node?.sourceUrl || '/noimage.jpg';
+          const alt = p.featuredImage?.node?.altText || p.title || 'thumbnail';
           return (
-            <Link
-              key={p.id}
-              href={`/posts/${p.slug}`}
-              className="group overflow-hidden rounded-xl border border-neutral-200 bg-white hover:shadow-sm"
-            >
-              <div className="aspect-[16/9] w-full overflow-hidden bg-neutral-100">
-                {img && (
-                  <Image
-                    src={img}
-                    alt={p.title}
-                    width={800}
-                    height={450}
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                  />
-                )}
+            <Link key={p.id} href={`/posts/${p.slug}`} className="group block">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-neutral-100">
+                <Image
+                  src={src}
+                  alt={alt}
+                  fill
+                  sizes="(min-width: 640px) 33vw, 100vw"
+                  className="object-cover transition duration-300 group-hover:scale-105"
+                  unoptimized
+                />
               </div>
-              <div className="p-4">
-                <time className="block text-xs text-neutral-500">
+              <h3 className="mt-2 line-clamp-2 text-sm font-semibold text-neutral-900">
+                {p.title}
+              </h3>
+              {p.date && (
+                <p className="text-xs text-neutral-500">
                   {new Date(p.date).toLocaleDateString('ja-JP')}
-                </time>
-                <div className="mt-1 line-clamp-2 text-sm font-medium text-neutral-900">
-                  {p.title}
-                </div>
-              </div>
+                </p>
+              )}
             </Link>
           );
         })}
