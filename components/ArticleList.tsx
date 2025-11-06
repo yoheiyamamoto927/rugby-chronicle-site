@@ -2,20 +2,17 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import type { WPPost } from '@/ts/wp'; // ← 型は必ずここから
+import type { WPPost } from '@/ts/wp';
+
+// === 型拡張：WPPost に content を許可（WP のクエリ内容に依存するため任意扱い） ===
+type PostLike = WPPost & { content?: string | null };
 
 const ORIGIN =
   (typeof window === 'undefined'
     ? process.env.NEXT_PUBLIC_WP_ORIGIN
     : process.env.NEXT_PUBLIC_WP_ORIGIN) || 'http://localhost:8080';
-// 追加：安全に日付を 'ja-JP' で表示
-const formatJPDate = (iso?: string | null) => {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('ja-JP');
-};
 
-/** 相対URLを絶対URLに正規化 */
+// 相対URL→絶対URL
 function toAbs(url?: string | null): string | null {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
@@ -24,15 +21,22 @@ function toAbs(url?: string | null): string | null {
   return url;
 }
 
-/** 本文から最初の <img src> を拾う */
+// 本文から最初の <img src> を拾う
 function firstImgFromContent(html?: string | null): string | null {
   if (!html) return null;
   const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return m ? m[1] : null;
 }
 
-/** 記事カード用のサムネURLとaltを決める */
-function pickThumb(p: WPPost): { src: string; alt: string } {
+// 日付フォーマッタ（undefined や壊れた日付を無視）
+const formatJPDate = (iso?: string | null) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('ja-JP');
+};
+
+// 記事カード用のサムネ決定
+function pickThumb(p: PostLike): { src: string; alt: string } {
   const fi = toAbs(p.featuredImage?.node?.sourceUrl ?? undefined);
   const fromContent = toAbs(firstImgFromContent(p.content));
   const src = fi || fromContent || '/noimage.jpg';
@@ -41,7 +45,7 @@ function pickThumb(p: WPPost): { src: string; alt: string } {
 }
 
 type Props = {
-  posts: WPPost[];
+  posts: PostLike[];
 };
 
 export default function ArticleList({ posts }: Props) {
@@ -54,7 +58,7 @@ export default function ArticleList({ posts }: Props) {
 
         return (
           <article key={p.id} className="group grid grid-cols-1 gap-6 sm:grid-cols-12">
-            {/* サムネイル（クリック可） */}
+            {/* サムネイル */}
             <div className="sm:col-span-5">
               <Link href={`/posts/${p.slug}`} className="block" prefetch>
                 <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-100">
@@ -63,7 +67,7 @@ export default function ArticleList({ posts }: Props) {
                     alt={alt}
                     fill
                     sizes="(min-width: 1024px) 36vw, (min-width: 640px) 45vw, 100vw"
-                    priority={i < 2} // 先頭2件はプライオリティ読み込み
+                    priority={i < 2}
                     unoptimized
                     className="object-cover transition duration-300 group-hover:scale-105"
                   />
@@ -73,11 +77,11 @@ export default function ArticleList({ posts }: Props) {
 
             {/* テキスト */}
             <div className="sm:col-span-7 flex min-w-0 flex-col justify-center">
-              {p.date && (
-  <time className="mb-2 block text-sm text-neutral-500" dateTime={p.date}>
-    {formatJPDate(p.date)}
-  </time>
-)}
+              {!!formatJPDate(p.date) && (
+                <time className="mb-2 block text-sm text-neutral-500" dateTime={p.date!}>
+                  {formatJPDate(p.date)}
+                </time>
+              )}
 
               <h3 className="mb-2 line-clamp-2 text-2xl font-serif font-semibold text-neutral-900">
                 <Link href={`/posts/${p.slug}`} prefetch>
@@ -85,12 +89,12 @@ export default function ArticleList({ posts }: Props) {
                 </Link>
               </h3>
 
-              {p.excerpt != null && (
+              {p.excerpt && (
                 <p
                   className="line-clamp-2 text-neutral-600"
-                  // WordPress excerpt がHTMLの場合もあるので軽く削る
                   dangerouslySetInnerHTML={{
-                    __html: (p.excerpt ?? '').replace(/<[^>]+>/g, '').slice(0, 120),
+                    // excerpt が HTML の場合もあるので簡易サニタイズ＋トリム
+                    __html: (p.excerpt || '').replace(/<[^>]+>/g, '').slice(0, 120),
                   }}
                 />
               )}
