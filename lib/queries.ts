@@ -16,7 +16,7 @@ export const POSTS = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
-        views
+        
       }
     }
   }
@@ -70,7 +70,7 @@ export const CATEGORY_POSTS = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
-        views
+        
       }
     }
   }
@@ -223,7 +223,7 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
-        views
+        
       }
       pageInfo { offsetPagination { total } }
     }

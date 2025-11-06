@@ -37,7 +37,7 @@ const POSTS_BY_COUNT = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
-        views
+        
       }
       pageInfo { hasNextPage }
     }
