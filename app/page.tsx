@@ -6,7 +6,8 @@ import HeroSlider from '@/components/HeroSlider';
 import LeftRail from '@/components/LeftRail';
 import { LineChart } from 'lucide-react';
 import { POSTS_BY_SLUGS } from '@/lib/queries';
-import type { WPPost } from '@/ts/wp';
+import type { WPPost } from '@/lib/wp';
+
 
 // キャッシュ無効（?page= で確実に切り替える）
 export const dynamic = 'force-dynamic';
