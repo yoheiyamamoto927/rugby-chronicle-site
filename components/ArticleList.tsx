@@ -2,16 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-
-export type WPPost = {
-  id: string;
-  slug: string;
-  title: string;
-  date?: string;
-  excerpt?: string;
-  content?: string | null;
-  featuredImage?: { node?: { sourceUrl?: string | null; altText?: string | null } } | null;
-};
+import type { WPPost } from '@/ts/wp'; // ← 型は必ずここから
 
 const ORIGIN =
   (typeof window === 'undefined'
@@ -86,15 +77,17 @@ export default function ArticleList({ posts }: Props) {
                   {p.title}
                 </Link>
               </h3>
-              {p.excerpt && (
+
+              {p.excerpt != null && (
                 <p
                   className="line-clamp-2 text-neutral-600"
                   // WordPress excerpt がHTMLの場合もあるので軽く削る
                   dangerouslySetInnerHTML={{
-                    __html: (p.excerpt || '').replace(/<[^>]+>/g, '').slice(0, 120),
+                    __html: (p.excerpt ?? '').replace(/<[^>]+>/g, '').slice(0, 120),
                   }}
                 />
               )}
+
               <div className="mt-3">
                 <Link
                   href={`/posts/${p.slug}`}
