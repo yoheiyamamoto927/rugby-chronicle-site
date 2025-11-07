@@ -2,20 +2,15 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'cms.universis.site',
-        pathname: '/wp-content/uploads/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'universis.site',
-        pathname: '/wp-content/uploads/**',
-      },
-    ],
-  },
+  // next.config.ts の images セクションに以下を含める
+images: {
+  remotePatterns: [
+    { protocol: 'https', hostname: 'cms.universis.site' },
+    { protocol: 'https', hostname: 'universis.site' },
+    { protocol: 'https', hostname: '**.universis.site' },
+  ],
+},
+
   reactStrictMode: true,
 };
 
