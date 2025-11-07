@@ -1,4 +1,9 @@
 // app/category/[slug]/page.tsx
+// 常にサーバーで動的にレンダリング（SSGしない）
+export const dynamic = 'force-dynamic';
+// ついでにキャッシュを短めに
+export const revalidate = 60;
+
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { gql } from '@/lib/wp';
