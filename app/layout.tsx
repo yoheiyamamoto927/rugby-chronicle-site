@@ -3,6 +3,33 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer"; // ← フッター追加
+import Script from 'next/script'
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="ja">
+      <head>
+        {/* Google Analytics for UNIVERSIS */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-JD9XMQM1MV"
+        />
+        <Script id="ga-universis" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-JD9XMQM1MV', {
+              page_path: window.location.pathname,
+            });
+          `}
+        </Script>
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
