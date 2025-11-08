@@ -3,36 +3,37 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer"; // ← フッター追加
-// app/layout.tsx（抜粋）
-import Script from 'next/script';
-import GaListener from './ga-listener';
+import Script from "next/script";
+import GAListener from "@/components/GAListener"; // ← 3) で作る
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
       <head>
-        {/* GA 本体 */}
+        {/* GA4 ライブラリ */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-JD9XMQM1MV"
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
           strategy="afterInteractive"
         />
-        {/* 初期化：自動 page_view はオフ */}
-        <Script id="ga-init" strategy="afterInteractive">
+        {/* 初期化（send_page_view は false にして手動管理） */}
+        <Script id="ga4-init" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-JD9XMQM1MV', { send_page_view: false });
+            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { send_page_view: false });
           `}
         </Script>
       </head>
       <body>
-        <GaListener />   {/* ← これを <body> 直下に入れる */}
         {children}
+        {/* ルート変更ごとに page_view を送る */}
+        <GAListener />
       </body>
     </html>
   );
 }
+
 
 
 
