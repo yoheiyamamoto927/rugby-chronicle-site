@@ -3,9 +3,10 @@
 /** カテゴリ（WordPressのカテゴリ slug と合わせる） */
 export const CATEGORY_LINKS = [
   { en: 'UNIVERSITY',         ja: '大学生',      href: '/category/university' },
+  { en: 'LEAGUEONE',         ja: 'リーグワン',      href: '/category/leagueone' },
   { en: 'JAPAN XV',           ja: '日本代表',    href: '/category/japan-xv' },
   { en: 'OVERSEAS',           ja: '海外',        href: '/category/overseas' },
-  { en: 'HIGHSCHOOL',         ja: '高校生',      href: '/category/highschool' },
+  //{ en: 'HIGHSCHOOL',         ja: '高校生',      href: '/category/highschool' },
   { en: 'COLUMN',             ja: 'コラム',      href: '/category/column' },
   { en: 'TACTICS & ANALYSIS', ja: '戦術・分析',  href: '/category/tactics-analysis' },
 ] as const;

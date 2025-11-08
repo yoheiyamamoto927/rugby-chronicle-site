@@ -27,7 +27,7 @@ const rightPairs: Pair[] = [
 // 下段のインフォメーション
 // 下段のインフォメーション（最小構成）
 const info: Array<{ label: string; href: string; external?: boolean }> = [
-  { label: '運営会社', href: '/company' },           // 任意。未作成なら外してOK
+  //{ label: '運営会社', href: '/company' },           // 任意。未作成なら外してOK
   { label: 'プライバシーポリシー', href: '/privacy-policy' }, // 必須（/app/privacy-policy/page.tsx を作成済み）
   // { label: '利用規約', href: '/terms' },          // 将来追加するならコメント解除
   // { label: 'クッキーポリシー', href: '/cookie-policy' }, // GA導入などCookie運用開始で追加
