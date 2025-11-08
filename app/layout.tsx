@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer"; // ← フッター追加
 import Script from "next/script";
-import GAListener from "@/components/GAListener"; // ← 3) で作る
+import GAListener from "@/components/GAListener";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
