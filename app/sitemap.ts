@@ -1,46 +1,27 @@
 // app/sitemap.ts
-import { gql } from "@/lib/wp"; // ← wp.ts 内の fetch 関数を使ってもOK
-import { SITE_URL } from "@/lib/constants";
+import type { MetadataRoute } from "next";
 
-export default async function sitemap() {
-  // ① WordPressから記事一覧を取得
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_WP_GRAPHQL_ENDPOINT}`,
+const BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://universis.site";
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const now = new Date().toISOString();
+
+  return [
     {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: `
-          {
-            posts(first: 100) {
-              nodes {
-                slug
-                date
-              }
-            }
-          }
-        `,
-      }),
-    }
-  );
-
-  const json = await res.json();
-  const posts = json.data.posts.nodes;
-
-  // ② 各記事ページのURLを返す
-  const postUrls = posts.map((post: any) => ({
-    url: `${process.env.NEXT_PUBLIC_SITE_URL}/posts/${post.slug}`,
-    lastModified: post.date,
-  }));
-
-  // ③ 固定ページ（トップ、カテゴリ、会社案内など）
-  const staticUrls = [
-    { url: `${process.env.NEXT_PUBLIC_SITE_URL}/`, lastModified: new Date() },
-    { url: `${process.env.NEXT_PUBLIC_SITE_URL}/about`, lastModified: new Date() },
-    { url: `${process.env.NEXT_PUBLIC_SITE_URL}/category`, lastModified: new Date() },
-    { url: `${process.env.NEXT_PUBLIC_SITE_URL}/contact`, lastModified: new Date() },
+      url: `${BASE}/`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 1.0,
+    },
+    // 必要に応じて固定ページを追加
+    { url: `${BASE}/about`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${BASE}/writers`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    // カテゴリ一覧（あなたのナビに合わせて）
+    { url: `${BASE}/category/university`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${BASE}/category/japan`,      lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${BASE}/category/overseas`,   lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${BASE}/category/highschool`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${BASE}/category/column`,     lastModified: now, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${BASE}/category/analysis`,   lastModified: now, changeFrequency: "weekly", priority: 0.8 },
   ];
-
-  // ④ 結果を返す
-  return [...staticUrls, ...postUrls];
 }

@@ -251,3 +251,13 @@ export const POSTS_BY_SLUGS = /* GraphQL */ `
     }
   }
 `;
+export const ALL_POST_SLUGS = /* GraphQL */ `
+  query AllPostSlugs($first: Int = 1000) {
+    posts(first: $first, where: { status: PUBLISH }) {
+      nodes {
+        slug
+        modified
+      }
+    }
+  }
+`;
