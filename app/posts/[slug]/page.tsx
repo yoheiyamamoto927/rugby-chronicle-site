@@ -18,6 +18,14 @@ type PostData = {
     categories?: { nodes: { name: string; slug: string }[] };
   } | null;
 };
+export const generateMetadata = ({ params }) => {
+  const post = getPost(params.slug);
+  return {
+    title: `${post.title}｜大学ラグビー分析メディア UNIVERSIS`,
+    description: `${post.excerpt}｜大学ラグビーや試合分析、戦術考察を配信。`,
+  };
+};
+
 
 // --- h2 を目次化＆本文に id 付与 ---
 function buildToc(html: string) {

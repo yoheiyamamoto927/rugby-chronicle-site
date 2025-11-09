@@ -1,5 +1,5 @@
 // lib/gtag.ts
-export const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-JD9XMQM1MV';
+export const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-JD9XMMQ1MV';
 
 export const pageview = (url: string) => {
   if (typeof window === 'undefined') return;

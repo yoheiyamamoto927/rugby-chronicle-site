@@ -20,12 +20,39 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-/* ------------ SEO / Meta ------------ */
 export const metadata: Metadata = {
-  title: "UNIVERSIS",
+  title: "UNIVERSIS｜大学ラグビー分析・戦術・試合レポート",
   description:
-    "UNIVERSIS | ラグビーの戦術・データ・文化を横断するスポーツ知のハブ。",
+    "大学ラグビーの戦術・データ・文化を横断して読む。UNIVERSISはラグビー分析・試合レポート・コラムを通して“次の一勝”を見つけるスポーツ知のハブ。",
+  keywords: [
+    "大学ラグビー",
+    "ラグビー分析",
+    "ラグビー記事",
+    "戦術分析",
+    "試合レポート",
+    "関東大学ラグビー",
+    "Rugby Analysis",
+    "UNIVERSIS"
+  ],
+  openGraph: {
+    title: "UNIVERSIS｜大学ラグビー分析・戦術・試合レポート",
+    description:
+      "ラグビーの戦術・データ・文化を横断する分析メディア『UNIVERSIS』。大学ラグビーを中心に、戦術・試合レポート・スカウティングを配信。",
+    url: "https://universis.site",
+    siteName: "UNIVERSIS",
+    images: [
+      {
+        url: "https://universis.site/ogp.png",
+        width: 1200,
+        height: 630,
+        alt: "UNIVERSIS | 大学ラグビー分析サイト",
+      },
+    ],
+    locale: "ja_JP",
+    type: "website",
+  },
 };
+
 
 /* ------------ Root Layout (default は1回だけ) ------------ */
 export default function RootLayout({
