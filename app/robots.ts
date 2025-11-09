@@ -12,6 +12,3 @@ export default function robots(): MetadataRoute.Robots {
     host: BASE,
   };
 }
-User-agent: *
-Allow: /
-Sitemap: https://universis.site/sitemap.xml
