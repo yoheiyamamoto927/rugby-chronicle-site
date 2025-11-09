@@ -1,8 +1,8 @@
 // app/posts/[slug]/page.tsx
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { gql } from '@/lib/wp';
-import { POST_BY_SLUG } from '@/lib/queries';
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { gql } from "@/lib/wp";
+import { POST_BY_SLUG } from "@/lib/queries";
 
 type PageParams = { slug: string };
 
@@ -13,34 +13,72 @@ type PostData = {
     title: string;
     date: string;
     content: string;
+    excerpt?: string;
     author?: { node?: { name?: string } };
     featuredImage?: { node?: { sourceUrl?: string; altText?: string } };
     categories?: { nodes: { name: string; slug: string }[] };
   } | null;
 };
-export const generateMetadata = ({ params }) => {
-  const post = getPost(params.slug);
-  return {
-    title: `${post.title}｜大学ラグビー分析メディア UNIVERSIS`,
-    description: `${post.excerpt}｜大学ラグビーや試合分析、戦術考察を配信。`,
-  };
-};
 
+// --- Metadata（型エラー修正＋実データ取得対応）---
+export async function generateMetadata({
+  params,
+}: {
+  params: PageParams | Promise<PageParams>;
+}) {
+  const p =
+    params && typeof (params as any).then === "function"
+      ? await (params as Promise<PageParams>)
+      : (params as PageParams);
+
+  const slug = decodeURI(p.slug || "");
+  if (!slug) return {};
+
+  try {
+    const data = await gql<PostData>(POST_BY_SLUG, { slug });
+    const post = data?.post;
+    if (!post) return {};
+
+    return {
+      title: `${post.title}｜大学ラグビー分析メディア UNIVERSIS`,
+      description:
+        post.excerpt?.replace(/<[^>]+>/g, "").slice(0, 100) ||
+        "大学ラグビーや試合分析、戦術考察を配信。",
+      openGraph: {
+        title: post.title,
+        description:
+          post.excerpt?.replace(/<[^>]+>/g, "").slice(0, 150) ||
+          "大学ラグビー分析記事",
+        url: `https://universis.site/posts/${slug}`,
+        type: "article",
+        images: post.featuredImage?.node?.sourceUrl
+          ? [{ url: post.featuredImage.node.sourceUrl }]
+          : undefined,
+      },
+      alternates: {
+        canonical: `https://universis.site/posts/${slug}`,
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 // --- h2 を目次化＆本文に id 付与 ---
 function buildToc(html: string) {
   const items: { id: string; text: string }[] = [];
   let seq = 0;
-  const withIds = (html || '').replace(
+  const withIds = (html || "").replace(
     /<h2([^>]*)>([\s\S]*?)<\/h2>/gi,
     (_m, attr, inner) => {
-      const plain = inner.replace(/<[^>]+>/g, '').trim();
+      const plain = inner.replace(/<[^>]+>/g, "").trim();
       const idMatch = String(attr).match(/id="([^"]+)"/i);
-      const id = idMatch ? idMatch[1] : `sec-${(++seq).toString().padStart(2, '0')}`;
+      const id = idMatch
+        ? idMatch[1]
+        : `sec-${(++seq).toString().padStart(2, "0")}`;
       items.push({ id, text: plain });
-      // 既に id があればそのまま
       if (idMatch) return `<h2 ${attr}>${inner}</h2>`;
-      return `<h2 id="${id}"${attr ? ` ${attr}` : ''}>${inner}</h2>`;
+      return `<h2 id="${id}"${attr ? ` ${attr}` : ""}>${inner}</h2>`;
     }
   );
   return { html: withIds, items };
@@ -49,16 +87,15 @@ function buildToc(html: string) {
 export default async function PostPage({
   params,
 }: {
-  // Next.js 15/16 両対応
-  params: Promise<PageParams> | PageParams;
+  params: PageParams | Promise<PageParams>;
 }) {
-  // params が Promise の場合に await
-  const p = params && typeof (params as any).then === 'function'
-    ? await (params as Promise<PageParams>)
-    : (params as PageParams);
+  const p =
+    params && typeof (params as any).then === "function"
+      ? await (params as Promise<PageParams>)
+      : (params as PageParams);
 
-  const rawSlug = p?.slug ?? '';
-  const slug = rawSlug ? decodeURI(rawSlug) : '';
+  const rawSlug = p?.slug ?? "";
+  const slug = rawSlug ? decodeURI(rawSlug) : "";
   if (!slug) return notFound();
 
   // 記事取得
@@ -66,19 +103,20 @@ export default async function PostPage({
   if (!data?.post) return notFound();
 
   const post = data.post;
-  const author = post.author?.node?.name ?? 'yamamoto';
-  const date = new Date(post.date).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+  const author = post.author?.node?.name ?? "yamamoto";
+  const date = new Date(post.date).toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   });
 
   // 目次
-  const { html: contentWithIds, items: toc } = buildToc(post.content || '');
+  const { html: contentWithIds, items: toc } = buildToc(post.content || "");
 
-  // 共有URL（.env 未設定でもローカルで動く）
+  // 共有URL
   const siteBase =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    "http://localhost:3000";
   const canonical = `${siteBase}/posts/${slug}`;
   const u = encodeURIComponent(canonical);
   const t = encodeURIComponent(post.title);
@@ -88,7 +126,6 @@ export default async function PostPage({
       {/* アイキャッチ */}
       {post.featuredImage?.node?.sourceUrl && (
         <div className="w-full border-b bg-neutral-50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.featuredImage.node.sourceUrl!}
             alt={post.featuredImage.node.altText || post.title}
@@ -109,7 +146,11 @@ export default async function PostPage({
               <>
                 <span className="mx-1">/</span>
                 {post.categories.nodes.map((c) => (
-                  <Link key={c.slug} href={`/category/${c.slug}`} className="mr-2 hover:underline">
+                  <Link
+                    key={c.slug}
+                    href={`/category/${c.slug}`}
+                    className="mr-2 hover:underline"
+                  >
                     {c.name}
                   </Link>
                 ))}
@@ -130,7 +171,6 @@ export default async function PostPage({
           {/* ライターカード */}
           <div className="mt-12 border-t pt-8">
             <div className="flex items-center gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/avatar-writer.png"
                 alt="Author"
@@ -151,7 +191,9 @@ export default async function PostPage({
           {/* 目次 */}
           {toc.length > 0 && (
             <nav className="mb-8" aria-label="目次">
-              <div className="mb-3 text-xs font-semibold text-neutral-500">目次</div>
+              <div className="mb-3 text-xs font-semibold text-neutral-500">
+                目次
+              </div>
               <ul className="space-y-2">
                 {toc.map((h) => (
                   <li key={h.id}>
@@ -171,7 +213,9 @@ export default async function PostPage({
           <div className="hidden xl:block sticky top-28 space-y-6">
             {/* Share */}
             <div className="rounded-xl border bg-white p-5 shadow-sm">
-              <div className="mb-3 text-xs font-semibold text-neutral-500">Share</div>
+              <div className="mb-3 text-xs font-semibold text-neutral-500">
+                Share
+              </div>
               <div className="grid grid-cols-4 gap-2">
                 <a
                   href={`https://twitter.com/intent/tweet?url=${u}&text=${t}`}
@@ -207,10 +251,36 @@ export default async function PostPage({
                 </a>
               </div>
             </div>
+            {/* JSON-LD 構造化データ */}
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      headline: post.title,
+      description: post.excerpt || "",
+      datePublished: post.date,
+      author: {
+        "@type": "Person",
+        name: author,
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "UNIVERSIS",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://universis.site/logo.png",
+        },
+      },
+      mainEntityOfPage: canonical,
+    }),
+  }}
+/>
+
 
             {/* Ad */}
             <div className="rounded-xl border bg-white p-4 shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/rugby-analyzer-banner.png"
                 alt="ad"
