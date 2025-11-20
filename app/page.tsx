@@ -16,10 +16,12 @@ export const revalidate = 0;
 // ★ここに好きな順番で“固定表示したい記事のスラッグ”を並べる
 const CURATED_RANKING_SLUGS = [
   // 例：'2025関西大学ラグビー…'などの日本語はNG。必ず「投稿スラッグ（英数字とハイフン）」にしてください。
-  'meijitukuba',
-  'kiji-b',
-  'kijid',
-  'hello-world',
+  '23teikyomeiji',
+  'meijikeio',
+  '25meijikeio',
+  '25wasedaaogaku',
+  '23-24spears',
+
   // 必要に応じて追加
 ];
 
