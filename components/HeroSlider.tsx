@@ -18,7 +18,10 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
   const timer = useRef<NodeJS.Timeout | null>(null);
   const len = posts.length;
 
-  const go = useCallback((i: number) => setIndex(((i % len) + len) % len), [len]);
+  const go = useCallback(
+    (i: number) => setIndex(((i % len) + len) % len),
+    [len]
+  );
 
   // 自動スライド
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
     };
   }, [index, intervalMs, len, hover, go]);
 
-  // Swipe (省略そのまま)
+  // スワイプ
   useEffect(() => {
     let startX = 0;
     const el = wrapRef.current;
@@ -71,7 +74,6 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
     };
   }, [index, go]);
 
-
   if (!len) return null;
 
   return (
@@ -83,93 +85,76 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
       aria-roledescription="carousel"
       aria-label="注目スライド"
     >
-      {/* --- PC / タブレット用（画像に文字を重ねる） --- */}
+      {/* スライド列（PC/SP 共通） */}
       <div
-        className="hidden md:flex h-[42vw] max-h-[520px] min-h-[280px] transition-transform duration-500"
+        className="flex w-full transition-transform duration-500 will-change-transform"
         style={{ transform: `translateX(${-index * 100}%)` }}
       >
         {posts.map((p, i) => {
-          const img = p.featuredImage?.node?.sourceUrl || '';
+          const img = p.featuredImage?.node?.sourceUrl ?? '';
           const alt = p.featuredImage?.node?.altText ?? p.title ?? 'post';
           const href = p.slug ? `/posts/${p.slug}` : '#';
 
           return (
-            <div key={i} className="relative min-w-full h-full">
-              <Image src={img} alt={alt} fill className="object-cover" priority={i === 0} unoptimized />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <article
+              key={`${p.id ?? p.slug ?? i}-${i}`}
+              className="relative min-w-full"
+            >
+              {/* 画像：常に 16:9 固定 */}
+              <div className="relative w-full aspect-[16/9] overflow-hidden">
+                {img && (
+                  <Image
+                    src={img}
+                    alt={alt}
+                    fill
+                    className="object-cover"
+                    priority={i === 0}
+                    sizes="100vw"
+                    unoptimized
+                  />
+                )}
 
-              <div className="absolute bottom-6 left-6 max-w-3xl">
-                <h2 className="text-3xl font-extrabold text-white leading-snug">
-                  {p.title}
-                </h2>
-
-                <Link
-                  href={href}
-                  className="inline-flex mt-4 rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-white"
-                >
-                  記事を読む
-                </Link>
+                {/* PCだけグラデーションのせる */}
+                <div className="pointer-events-none absolute inset-0 hidden md:block bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
               </div>
-            </div>
+
+              {/* テキストブロック
+                  - SP: 画像の下に白いカード
+                  - PC: 画像の上に白文字オーバーレイ
+              */}
+              <div className="bg-white px-4 py-4 md:absolute md:inset-x-10 md:bottom-8 md:bg-transparent md:px-0 md:py-0 md:text-white">
+                <div className="md:max-w-3xl">
+                  <h2 className="text-lg font-bold leading-snug text-neutral-900 md:text-3xl md:font-extrabold md:text-white">
+                    {p.title ?? ''}
+                  </h2>
+
+                  {p.slug && (
+                    <Link
+                      href={href}
+                      className="mt-3 inline-flex rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800 md:bg-white md:text-neutral-900 md:hover:bg-white"
+                    >
+                      記事を読む
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </article>
           );
         })}
       </div>
 
-      {/* --- スマホ用（画像 → テキストの縦並び） --- */}
-<div
-  className="md:hidden flex w-full transition-transform duration-500"
-  style={{ transform: `translateX(${-index * 100}%)` }}
->
-  {posts.map((p, i) => {
-    const img = p.featuredImage?.node?.sourceUrl || '';
-    const alt = p.featuredImage?.node?.altText ?? p.title ?? 'post';
-    const href = p.slug ? `/posts/${p.slug}` : '#';
-
-    return (
-      <div key={i} className="min-w-full">
-        {/* ① 画像を「正しい比率で固定」 */}
-        <div className="w-full relative aspect-[16/9] overflow-hidden">
-          <Image
-            src={img}
-            alt={alt}
-            fill
-            className="object-cover"
-            unoptimized
-          />
-        </div>
-
-        {/* ② 画像下のテキスト */}
-        <div className="bg-white px-4 py-4 shadow-sm">
-          <h2 className="text-lg font-bold text-neutral-900 leading-snug">
-            {p.title}
-          </h2>
-
-          <Link
-            href={href}
-            className="inline-flex mt-3 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
-          >
-            記事を読む
-          </Link>
-        </div>
-      </div>
-    );
-  })}
-</div>
-
-
-
-      {/* 矢印（PCのみ表示） */}
+      {/* 矢印（PCのみ） */}
       <button
         aria-label="前へ"
         onClick={() => go(index - 1)}
-        className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 hover:bg-white shadow"
+        className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white md:flex"
       >
         <ChevronLeft className="h-6 w-6" />
       </button>
       <button
         aria-label="次へ"
         onClick={() => go(index + 1)}
-        className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 hover:bg-white shadow"
+        className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white md:flex"
       >
         <ChevronRight className="h-6 w-6" />
       </button>
@@ -179,7 +164,7 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
         {posts.map((_, i) => (
           <button
             key={i}
-            aria-label={`スライド ${i + 1}`}
+            aria-label={`スライド ${i + 1} に移動`}
             onClick={() => go(i)}
             className={`h-2.5 rounded-full transition-all ${
               i === index ? 'w-6 bg-white' : 'w-2.5 bg-white/60'
