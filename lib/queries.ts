@@ -1,6 +1,5 @@
 // lib/queries.ts
 // すべて「GraphQLクエリ文字列をexportするだけ」のファイルです。
-// import は不要。各ページ/サーバー関数側で gql(fetch) してください。
 
 /** 記事一覧（新着順） */
 export const POSTS = /* GraphQL */ `
@@ -16,7 +15,6 @@ export const POSTS = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
-        
       }
     }
   }
@@ -31,7 +29,14 @@ export const POST_BY_SLUG = /* GraphQL */ `
       title
       date
       content(format: RENDERED)
-      author { node { name } }
+      author { 
+        node { 
+          name
+          slug   # ← ★ 追加（著者ページに飛ぶために必須）
+          description
+          avatar { url }
+        } 
+      }
       featuredImage { node { sourceUrl altText } }
       categories { nodes { name slug } }
     }
@@ -70,7 +75,6 @@ export const CATEGORY_POSTS = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
-        
       }
     }
   }
@@ -126,7 +130,7 @@ export const CATEGORY_PAGE = /* GraphQL */ `
   }
 `;
 
-/** カテゴリー詳細（親子判定用に parentId を含む） */
+/** カテゴリー詳細 */
 export const CATEGORY_BY_SLUG = /* GraphQL */ `
   query CategoryBySlug($slug: ID!, $first: Int = 30) {
     category(id: $slug, idType: SLUG) {
@@ -151,7 +155,6 @@ export const CATEGORY_BY_SLUG = /* GraphQL */ `
               name
               slug
               parentId
-              # parent { id }  // ※ 環境によっては parentId が無い場合に切替
             }
           }
         }
@@ -176,7 +179,7 @@ export const AUTHORS = /* GraphQL */ `
   }
 `;
 
-/** カテゴリー別 offset ページネーション */
+/** カテゴリー offset ページネーション */
 export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   query CategoryPostsWithOffset($slug: ID!, $size: Int!, $offset: Int!) {
     category(id: $slug, idType: SLUG) {
@@ -206,7 +209,7 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   }
 `;
 
-/** 全体の offset ページネーション（トップの一覧用） */
+/** トップ一覧 offset ページネーション */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
   query PostsWithOffsetPagination($size: Int!, $offset: Int!) {
     posts(
@@ -214,6 +217,7 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         status: PUBLISH
         orderby: { field: DATE, order: DESC }
         offsetPagination: { size: $size, offset: $offset }
+        authorName: $authorName
       }
     ) {
       nodes {
@@ -223,14 +227,13 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
-        
       }
       pageInfo { offsetPagination { total } }
     }
   }
 `;
 
-/** 指定したスラッグ配列で投稿取得（キュレーション等で使用） */
+/** 指定したスラッグ配列で投稿取得 */
 export const POSTS_BY_SLUGS = /* GraphQL */ `
   query PostsBySlugs($slugs: [String!]!) {
     posts(
@@ -251,6 +254,7 @@ export const POSTS_BY_SLUGS = /* GraphQL */ `
     }
   }
 `;
+
 export const ALL_POST_SLUGS = /* GraphQL */ `
   query AllPostSlugs($first: Int = 1000) {
     posts(first: $first, where: { status: PUBLISH }) {
