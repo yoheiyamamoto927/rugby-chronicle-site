@@ -116,37 +116,46 @@ export default function HeroSlider({ posts, intervalMs = 4500 }: Props) {
       </div>
 
       {/* --- スマホ用（画像 → テキストの縦並び） --- */}
-      <div
-        className="md:hidden flex w-full transition-transform duration-500"
-        style={{ transform: `translateX(${-index * 100}%)` }}
-      >
-        {posts.map((p, i) => {
-          const img = p.featuredImage?.node?.sourceUrl || '';
-          const alt = p.featuredImage?.node?.altText ?? p.title ?? 'post';
-          const href = p.slug ? `/posts/${p.slug}` : '#';
+<div
+  className="md:hidden flex w-full transition-transform duration-500"
+  style={{ transform: `translateX(${-index * 100}%)` }}
+>
+  {posts.map((p, i) => {
+    const img = p.featuredImage?.node?.sourceUrl || '';
+    const alt = p.featuredImage?.node?.altText ?? p.title ?? 'post';
+    const href = p.slug ? `/posts/${p.slug}` : '#';
 
-          return (
-            <div key={i} className="min-w-full">
-              <div className="w-full aspect-[16/9] relative">
-                <Image src={img} alt={alt} fill className="object-cover" unoptimized />
-              </div>
+    return (
+      <div key={i} className="min-w-full">
+        {/* ① 画像を「正しい比率で固定」 */}
+        <div className="w-full relative aspect-[16/9] overflow-hidden">
+          <Image
+            src={img}
+            alt={alt}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
 
-              <div className="bg-white px-4 py-4 shadow-sm">
-                <h2 className="text-lg font-bold text-neutral-900 leading-snug">
-                  {p.title}
-                </h2>
+        {/* ② 画像下のテキスト */}
+        <div className="bg-white px-4 py-4 shadow-sm">
+          <h2 className="text-lg font-bold text-neutral-900 leading-snug">
+            {p.title}
+          </h2>
 
-                <Link
-                  href={href}
-                  className="inline-flex mt-3 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
-                >
-                  記事を読む
-                </Link>
-              </div>
-            </div>
-          );
-        })}
+          <Link
+            href={href}
+            className="inline-flex mt-3 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
+          >
+            記事を読む
+          </Link>
+        </div>
       </div>
+    );
+  })}
+</div>
+
 
 
       {/* 矢印（PCのみ表示） */}
