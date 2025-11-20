@@ -52,63 +52,60 @@ export default function ArticleList({ posts }: Props) {
   if (!posts?.length) return null;
 
   return (
-    <div className="space-y-12">
+    // ★ スマホ2列 / タブレット3列 / PC3列 のカードグリッド
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
       {posts.map((p, i) => {
         const { src, alt } = pickThumb(p);
+        const hasDate = !!formatJPDate(p.date);
 
         return (
-          <article key={p.id} className="group grid grid-cols-1 gap-6 sm:grid-cols-12">
-            {/* サムネイル */}
-            <div className="sm:col-span-5">
-              <Link href={`/posts/${p.slug}`} className="block" prefetch>
-                <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-100">
-                  <Image
-                    src={src}
-                    alt={alt}
-                    fill
-                    sizes="(min-width: 1024px) 36vw, (min-width: 640px) 45vw, 100vw"
-                    priority={i < 2}
-                    unoptimized
-                    className="object-cover transition duration-300 group-hover:scale-105"
-                  />
-                </div>
-              </Link>
-            </div>
-
-            {/* テキスト */}
-            <div className="sm:col-span-7 flex min-w-0 flex-col justify-center">
-              {!!formatJPDate(p.date) && (
-                <time className="mb-2 block text-sm text-neutral-500" dateTime={p.date!}>
-                  {formatJPDate(p.date)}
-                </time>
-              )}
-
-              <h3 className="mb-2 line-clamp-2 text-2xl font-serif font-semibold text-neutral-900">
-                <Link href={`/posts/${p.slug}`} prefetch>
-                  {p.title}
-                </Link>
-              </h3>
-
-              {p.excerpt && (
-                <p
-                  className="line-clamp-2 text-neutral-600"
-                  dangerouslySetInnerHTML={{
-                    // excerpt が HTML の場合もあるので簡易サニタイズ＋トリム
-                    __html: (p.excerpt || '').replace(/<[^>]+>/g, '').slice(0, 120),
-                  }}
+          <article
+            key={p.id}
+            className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/70 hover:shadow-md hover:ring-neutral-300 transition"
+          >
+            <Link href={`/posts/${p.slug}`} prefetch className="flex h-full flex-col">
+              {/* サムネイル */}
+              <div className="relative w-full aspect-[4/3] overflow-hidden bg-neutral-100">
+                <Image
+                  src={src}
+                  alt={alt}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
+                  priority={i < 2}
+                  unoptimized
+                  className="object-cover transition duration-300 group-hover:scale-105"
                 />
-              )}
-
-              <div className="mt-3">
-                <Link
-                  href={`/posts/${p.slug}`}
-                  className="inline-flex items-center text-sm font-medium text-neutral-900 hover:underline"
-                  prefetch
-                >
-                  続きを読む →
-                </Link>
               </div>
-            </div>
+
+              {/* テキスト */}
+              <div className="flex flex-1 flex-col px-3 pb-3 pt-2">
+                {hasDate && (
+                  <time
+                    className="mb-1 text-[11px] text-neutral-500"
+                    dateTime={p.date!}
+                  >
+                    {formatJPDate(p.date)}
+                  </time>
+                )}
+
+                <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-neutral-900">
+                  {p.title}
+                </h3>
+
+                {p.excerpt && (
+                  <p
+                    className="mt-1 hidden text-[11px] leading-snug text-neutral-600 md:line-clamp-3 md:block"
+                    dangerouslySetInnerHTML={{
+                      __html: (p.excerpt || '').replace(/<[^>]+>/g, '').slice(0, 120),
+                    }}
+                  />
+                )}
+
+                <span className="mt-2 inline-flex items-center text-[11px] font-medium text-neutral-900/80 group-hover:text-neutral-900">
+                  続きを読む →
+                </span>
+              </div>
+            </Link>
           </article>
         );
       })}
