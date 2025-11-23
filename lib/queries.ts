@@ -1,7 +1,7 @@
 // lib/queries.ts
 // すべて「GraphQLクエリ文字列をexportするだけ」のファイルです。
 
-/** 記事一覧（新着順・トップなどで使用） */
+/** 記事一覧（新着順） */
 export const POSTS = /* GraphQL */ `
   query Posts($first: Int = 12) {
     posts(
@@ -39,32 +39,6 @@ export const POST_BY_SLUG = /* GraphQL */ `
       }
       featuredImage { node { sourceUrl altText } }
       categories { nodes { name slug } }
-    }
-  }
-`;
-
-/**
- * ★ /posts 用：著者フィルタ付きの一覧（offsetPagination を使わない版）
- *  - authorName には「ユーザーのスラッグ（nicename）」を渡す
- */
-export const POSTS_INDEX = /* GraphQL */ `
-  query PostsIndex($first: Int = 50, $authorName: String) {
-    posts(
-      first: $first
-      where: {
-        status: PUBLISH
-        orderby: { field: DATE, order: DESC }
-        authorName: $authorName
-      }
-    ) {
-      nodes {
-        id
-        slug
-        title
-        date
-        excerpt
-        featuredImage { node { sourceUrl altText } }
-      }
     }
   }
 `;
@@ -205,7 +179,7 @@ export const AUTHORS = /* GraphQL */ `
   }
 `;
 
-/** カテゴリー offset ページネーション（カテゴリ側は offsetPagination が使える想定のまま） */
+/** カテゴリー offset ページネーション（これは今まで通り offsetPagination 使う） */
 export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   query CategoryPostsWithOffset($slug: ID!, $size: Int!, $offset: Int!) {
     category(id: $slug, idType: SLUG) {
@@ -236,16 +210,17 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
 `;
 
 /**
- * トップなど別ページで使っている offsetPagination 版（ここは以前の形に戻す）
- *  ※ /posts では使わず、上の POSTS_INDEX を使う。
+ * 全体の一覧用（/posts）
+ * → offsetPagination は使わず、first: 100 だけ取得して
+ *   Next.js 側でページング＆著者フィルタを行う
  */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
-  query PostsWithOffsetPagination($size: Int!, $offset: Int!) {
+  query PostsWithSimplePagination($first: Int = 100) {
     posts(
+      first: $first
       where: {
         status: PUBLISH
         orderby: { field: DATE, order: DESC }
-        offsetPagination: { size: $size, offset: $offset }
       }
     ) {
       nodes {
@@ -255,8 +230,8 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
+        author { node { name slug } }
       }
-      pageInfo { offsetPagination { total } }
     }
   }
 `;
