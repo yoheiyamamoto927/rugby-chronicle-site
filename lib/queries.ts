@@ -1,7 +1,7 @@
 // lib/queries.ts
 // すべて「GraphQLクエリ文字列をexportするだけ」のファイルです。
 
-/** 記事一覧（新着順） */
+/** 記事一覧（新着順・トップなどで使用） */
 export const POSTS = /* GraphQL */ `
   query Posts($first: Int = 12) {
     posts(
@@ -39,6 +39,32 @@ export const POST_BY_SLUG = /* GraphQL */ `
       }
       featuredImage { node { sourceUrl altText } }
       categories { nodes { name slug } }
+    }
+  }
+`;
+
+/**
+ * ★ /posts 用：著者フィルタ付きの一覧（offsetPagination を使わない版）
+ *  - authorName には「ユーザーのスラッグ（nicename）」を渡す
+ */
+export const POSTS_INDEX = /* GraphQL */ `
+  query PostsIndex($first: Int = 50, $authorName: String) {
+    posts(
+      first: $first
+      where: {
+        status: PUBLISH
+        orderby: { field: DATE, order: DESC }
+        authorName: $authorName
+      }
+    ) {
+      nodes {
+        id
+        slug
+        title
+        date
+        excerpt
+        featuredImage { node { sourceUrl altText } }
+      }
     }
   }
 `;
@@ -179,7 +205,7 @@ export const AUTHORS = /* GraphQL */ `
   }
 `;
 
-/** カテゴリー offset ページネーション */
+/** カテゴリー offset ページネーション（カテゴリ側は offsetPagination が使える想定のまま） */
 export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   query CategoryPostsWithOffset($slug: ID!, $size: Int!, $offset: Int!) {
     category(id: $slug, idType: SLUG) {
@@ -209,19 +235,16 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   }
 `;
 
-/** トップ一覧 offset ページネーション（著者フィルタ対応） */
-/** トップ一覧 offset ページネーション（著者フィルタ対応） */
+/**
+ * トップなど別ページで使っている offsetPagination 版（ここは以前の形に戻す）
+ *  ※ /posts では使わず、上の POSTS_INDEX を使う。
+ */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
-  query PostsWithOffsetPagination(
-    $size: Int!
-    $offset: Int!
-    $authorName: String
-  ) {
+  query PostsWithOffsetPagination($size: Int!, $offset: Int!) {
     posts(
       where: {
         status: PUBLISH
         orderby: { field: DATE, order: DESC }
-        authorName: $authorName
         offsetPagination: { size: $size, offset: $offset }
       }
     ) {
@@ -237,7 +260,6 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
     }
   }
 `;
-
 
 /** 指定したスラッグ配列で投稿取得 */
 export const POSTS_BY_SLUGS = /* GraphQL */ `
