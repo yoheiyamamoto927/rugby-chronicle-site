@@ -14,7 +14,7 @@ type PostData = {
     date: string;
     content: string;
     excerpt?: string;
-    author?: { node?: { name?: string } };
+    author?: { node?: { name?: string; slug?: string } };
     featuredImage?: { node?: { sourceUrl?: string; altText?: string } };
     categories?: { nodes: { name: string; slug: string }[] };
   } | null;
@@ -103,7 +103,10 @@ export default async function PostPage({
   if (!data?.post) return notFound();
 
   const post = data.post;
-  const author = post.author?.node?.name ?? "yamamoto";
+
+  const authorName = post.author?.node?.name ?? "yamamoto";
+  const authorSlug = post.author?.node?.slug ?? "yamamoto";
+
   const date = new Date(post.date).toLocaleDateString("ja-JP", {
     year: "numeric",
     month: "2-digit",
@@ -136,12 +139,20 @@ export default async function PostPage({
 
       {/* 本文＋サイドバー */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-10 sm:px-6 lg:px-8 xl:grid-cols-12">
+        
         {/* 本文 */}
         <article className="xl:col-span-8">
+
+          {/* 日付 & 著者リンク（←ここ変更済み） */}
           <div className="mb-3 text-sm text-neutral-500">
             <time dateTime={post.date}>{date}</time>
             <span className="mx-1">/</span>
-            <span>{author}</span>
+            <Link
+              href={`/posts?author=${authorSlug}`}
+              className="hover:underline"
+            >
+              {authorName}
+            </Link>
             {post.categories?.nodes?.length ? (
               <>
                 <span className="mx-1">/</span>
@@ -177,7 +188,12 @@ export default async function PostPage({
                 className="h-12 w-12 rounded-full object-cover ring-1 ring-neutral-200"
               />
               <div>
-                <div className="font-semibold text-neutral-900">{author}</div>
+                <Link
+                  href={`/posts?author=${authorSlug}`}
+                  className="font-semibold text-neutral-900 hover:underline"
+                >
+                  {authorName}
+                </Link>
                 <p className="text-sm text-neutral-600">
                   データと戦術のあいだを翻訳する人。UNIVERSIS／Rugby Analyzer。
                 </p>
@@ -188,7 +204,6 @@ export default async function PostPage({
 
         {/* サイドバー */}
         <aside className="xl:col-span-4 relative">
-          {/* 目次 */}
           {toc.length > 0 && (
             <nav className="mb-8" aria-label="目次">
               <div className="mb-3 text-xs font-semibold text-neutral-500">
@@ -251,33 +266,33 @@ export default async function PostPage({
                 </a>
               </div>
             </div>
-            {/* JSON-LD 構造化データ */}
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "NewsArticle",
-      headline: post.title,
-      description: post.excerpt || "",
-      datePublished: post.date,
-      author: {
-        "@type": "Person",
-        name: author,
-      },
-      publisher: {
-        "@type": "Organization",
-        name: "UNIVERSIS",
-        logo: {
-          "@type": "ImageObject",
-          url: "https://universis.site/logo.png",
-        },
-      },
-      mainEntityOfPage: canonical,
-    }),
-  }}
-/>
 
+            {/* JSON-LD */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "NewsArticle",
+                  headline: post.title,
+                  description: post.excerpt || "",
+                  datePublished: post.date,
+                  author: {
+                    "@type": "Person",
+                    name: authorName,
+                  },
+                  publisher: {
+                    "@type": "Organization",
+                    name: "UNIVERSIS",
+                    logo: {
+                      "@type": "ImageObject",
+                      url: "https://universis.site/logo.png",
+                    },
+                  },
+                  mainEntityOfPage: canonical,
+                }),
+              }}
+            />
 
             {/* Ad */}
             <div className="rounded-xl border bg-white p-4 shadow-sm">

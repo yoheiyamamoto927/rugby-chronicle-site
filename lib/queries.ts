@@ -29,13 +29,13 @@ export const POST_BY_SLUG = /* GraphQL */ `
       title
       date
       content(format: RENDERED)
-      author { 
-        node { 
+      author {
+        node {
           name
-          slug   # ← ★ 追加（著者ページに飛ぶために必須）
+          slug
           description
           avatar { url }
-        } 
+        }
       }
       featuredImage { node { sourceUrl altText } }
       categories { nodes { name slug } }
@@ -209,9 +209,13 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   }
 `;
 
-/** トップ一覧 offset ページネーション */
+/** トップ一覧 offset ページネーション（著者フィルタ対応） */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
-  query PostsWithOffsetPagination($size: Int!, $offset: Int!) {
+  query PostsWithOffsetPagination(
+    $size: Int!
+    $offset: Int!
+    $authorName: String
+  ) {
     posts(
       where: {
         status: PUBLISH
