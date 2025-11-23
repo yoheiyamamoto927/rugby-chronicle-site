@@ -210,6 +210,7 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
 `;
 
 /** トップ一覧 offset ページネーション（著者フィルタ対応） */
+/** トップ一覧 offset ページネーション（著者フィルタ対応） */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
   query PostsWithOffsetPagination(
     $size: Int!
@@ -220,8 +221,8 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
       where: {
         status: PUBLISH
         orderby: { field: DATE, order: DESC }
-        offsetPagination: { size: $size, offset: $offset }
         authorName: $authorName
+        offsetPagination: { size: $size, offset: $offset }
       }
     ) {
       nodes {
@@ -236,6 +237,7 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
     }
   }
 `;
+
 
 /** 指定したスラッグ配列で投稿取得 */
 export const POSTS_BY_SLUGS = /* GraphQL */ `
