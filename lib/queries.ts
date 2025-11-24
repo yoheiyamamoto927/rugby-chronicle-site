@@ -427,3 +427,42 @@ export const ALL_POST_SLUGS = /* GraphQL */ `
     }
   }
 `;
+/** ライター別の記事一覧（authorName でサーバー側フィルタ） */
+export const POSTS_BY_AUTHOR = /* GraphQL */ `
+  query PostsByAuthor($first: Int = 50, $authorSlug: String!) {
+    posts(
+      first: $first
+      where: {
+        status: PUBLISH
+        orderby: { field: DATE, order: DESC }
+        authorName: $authorSlug
+      }
+    ) {
+      nodes {
+        id
+        slug
+        title
+        date
+        excerpt
+        author {
+          node {
+            name
+            slug
+          }
+        }
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        categories {
+          nodes {
+            name
+            slug
+          }
+        }
+      }
+    }
+  }
+`;

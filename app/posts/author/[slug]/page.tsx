@@ -1,13 +1,13 @@
 // app/posts/author/[slug]/page.tsx
 import { gql } from "@/lib/wp";
 import ArticleList from "@/components/ArticleList";
-import { POSTS } from "@/lib/queries";
+import { POSTS_BY_AUTHOR } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string; // /posts/author/universis など
+  slug: string; // universis / imamoto-takashi など
 };
 
 type WpImage = {
@@ -42,16 +42,10 @@ export type WpPost = {
   };
 };
 
-type PostsResult = {
+type PostsByAuthorResult = {
   posts: {
     nodes: WpPost[];
   };
-};
-
-// ★ URL の slug → WP 上の表示名 のマッピング
-const AUTHOR_NAME_MAP: Record<string, string> = {
-  universis: "YOHEI YAMAMOTO",
-  "imamoto-takashi": "IMAMOTO TAKASHI",
 };
 
 export default async function AuthorPostsPage({
@@ -59,25 +53,16 @@ export default async function AuthorPostsPage({
 }: {
   params: Params;
 }) {
-  const authorSlug = params.slug; // universis / imamoto-takashi
-  const mappedName = AUTHOR_NAME_MAP[authorSlug];
+  const authorSlug = params.slug; // URL の /posts/author/[slug]
 
-  // 投稿を多めに取得
-  const data = await gql<PostsResult>(POSTS, { first: 100 });
-  const all = data?.posts?.nodes ?? [];
-
-  // slug か name どちらか一致すれば OK にする
-  const posts = all.filter((p) => {
-    const s = p.author?.node?.slug;
-    const n = p.author?.node?.name;
-    return (
-      (s && s === authorSlug) ||
-      (mappedName && n === mappedName)
-    );
+  // 🔍 ライター slug でサーバー側フィルタ
+  const data = await gql<PostsByAuthorResult>(POSTS_BY_AUTHOR, {
+    first: 100,
+    authorSlug,
   });
 
-  const authorName =
-    posts[0]?.author?.node?.name || mappedName || authorSlug;
+  const posts = data?.posts?.nodes ?? [];
+  const authorName = posts[0]?.author?.node?.name ?? authorSlug;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
