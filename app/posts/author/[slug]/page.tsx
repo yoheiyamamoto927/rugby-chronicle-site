@@ -1,13 +1,13 @@
 // app/posts/author/[slug]/page.tsx
 import { gql } from "@/lib/wp";
 import ArticleList from "@/components/ArticleList";
-import { POSTS_FOR_AUTHOR_VIEW } from "@/lib/queries";
+import { POSTS } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string; // universis / imamoto-takashi
+  slug: string; // /posts/author/universis など
 };
 
 type WpImage = {
@@ -42,36 +42,55 @@ export type WpPost = {
   };
 };
 
-type PostsForAuthorViewResult = {
+type PostsResult = {
   posts: {
     nodes: WpPost[];
   };
 };
 
-export default async function AuthorPostsPage({ params }: { params: Params }) {
-  const authorSlug = params.slug;
+// ★ URL の slug → WP 上の表示名 のマッピング
+const AUTHOR_NAME_MAP: Record<string, string> = {
+  universis: "YOHEI YAMAMOTO",
+  "imamoto-takashi": "IMAMOTO TAKASHI",
+};
 
-  // author 付きで全件取得 → Next 側で絞る
-  const data = await gql<PostsForAuthorViewResult>(POSTS_FOR_AUTHOR_VIEW, {
-    first: 200,
-  });
+export default async function AuthorPostsPage({
+  params,
+}: {
+  params: Params;
+}) {
+  const authorSlug = params.slug; // universis / imamoto-takashi
+  const mappedName = AUTHOR_NAME_MAP[authorSlug];
 
+  // 投稿を多めに取得
+  const data = await gql<PostsResult>(POSTS, { first: 100 });
   const all = data?.posts?.nodes ?? [];
 
-  const posts = all.filter((p) => p.author?.node?.slug === authorSlug);
+  // slug か name どちらか一致すれば OK にする
+  const posts = all.filter((p) => {
+    const s = p.author?.node?.slug;
+    const n = p.author?.node?.name;
+    return (
+      (s && s === authorSlug) ||
+      (mappedName && n === mappedName)
+    );
+  });
 
-  const authorName = posts[0]?.author?.node?.name ?? authorSlug;
+  const authorName =
+    posts[0]?.author?.node?.name || mappedName || authorSlug;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
-      <h1 className="mb-6 text-2xl font-bold">
+      <h1 className="mb-4 text-2xl font-bold">
         ライター:
         <span className="ml-1">{authorName}</span>
         の記事一覧
       </h1>
 
       {posts.length === 0 ? (
-        <p className="text-sm text-neutral-500">まだ記事がありません。</p>
+        <p className="text-sm text-neutral-500">
+          まだ記事がありません。
+        </p>
       ) : (
         <ArticleList posts={posts} />
       )}
