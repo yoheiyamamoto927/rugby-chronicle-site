@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string; // universis / imamoto-takashi など
+  slug: string; // URL上の universis / imamoto-takashi など
 };
 
 type WpImage = {
@@ -42,7 +42,7 @@ export type WpPost = {
   };
 };
 
-type PostsForAuthorViewResult = {
+type PostsForAuthorResult = {
   posts: {
     nodes: WpPost[];
   };
@@ -53,31 +53,23 @@ export default async function AuthorPostsPage({
 }: {
   params: Params;
 }) {
-  const authorSlug = params.slug; // URL の /posts/author/[slug]
+  const authorSlug = params.slug; // /posts/author/[slug] の slug
 
-  // 表示用の名前（UIだけに使う。フィルタには使わない）
-  const displayNameMap: Record<string, string> = {
-    universis: "YOHEI YAMAMOTO",
-    "imamoto-takashi": "IMAMOTO TAKASHI",
-  };
-  const displayName = displayNameMap[authorSlug] ?? authorSlug;
+  // ① 全投稿（最大100件）を取得
+  const data = await gql<PostsForAuthorResult>(POSTS_FOR_AUTHOR_VIEW, {
+    first: 100,
+  });
 
-  // 🔍 まずは全投稿を多めに取得
-  const data = await gql<PostsForAuthorViewResult>(
-    POSTS_FOR_AUTHOR_VIEW,
-    { first: 100 }
-  );
+  const allPosts = data?.posts?.nodes ?? [];
 
-  const all = data?.posts?.nodes ?? [];
-
-  // ✅ author.slug でコード側フィルタ
-  const posts = all.filter(
+  // ② author.slug で絞り込み
+  const posts = allPosts.filter(
     (p) => p.author?.node?.slug === authorSlug
   );
 
-  // 実際の投稿から author.name が取れればそれを優先表示
-  const authorNameFromPost = posts[0]?.author?.node?.name;
-  const authorName = authorNameFromPost ?? displayName;
+  // 見出し用の名前（投稿から引っ張る）
+  const authorName =
+    posts[0]?.author?.node?.name ?? authorSlug;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
