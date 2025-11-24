@@ -146,11 +146,12 @@ export default async function PostPage({
             <time dateTime={post.date}>{date}</time>
             <span className="mx-1">/</span>
             <Link
-              href={`/posts/author/${encodeURIComponent(authorSlug)}`}
-              className="hover:underline"
-            >
-              {authorName}
-            </Link>
+  href={`/posts/author/${authorSlug}`}
+  className="hover:underline"
+>
+  {authorName}
+</Link>
+
             {post.categories?.nodes?.length ? (
               <>
                 <span className="mx-1">/</span>
@@ -187,11 +188,12 @@ export default async function PostPage({
               />
               <div>
                 <Link
-                  href={`/posts/author/${encodeURIComponent(authorSlug)}`}
-                  className="font-semibold text-neutral-900 hover:underline"
-                >
-                  {authorName}
-                </Link>
+  href={`/posts/author/${authorSlug}`}
+  className="font-semibold text-neutral-900 hover:underline"
+>
+  {authorName}
+</Link>
+
                 <p className="text-sm text-neutral-600">
                   データと戦術のあいだを翻訳する人。UNIVERSIS／Rugby Analyzer。
                 </p>

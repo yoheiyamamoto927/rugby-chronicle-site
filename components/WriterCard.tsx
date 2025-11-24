@@ -48,15 +48,16 @@ export default function WriterCard({
 
       {/* AUTHOR リンクを /posts/author/[slug] に統一 */}
       {slug ? (
-        <div className="mt-5">
-          <Link
-            href={`/posts/author/${encodeURIComponent(slug)}`}
-            className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-          >
-            記事一覧を見る →
-          </Link>
-        </div>
-      ) : null}
+  <div className="mt-5">
+    <Link
+      href={`/posts/author/${slug}`}
+      className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+    >
+      記事一覧を見る →
+    </Link>
+  </div>
+) : null}
+
     </div>
   );
 }
