@@ -18,7 +18,7 @@ export default function WriterCard({
   avatarUrl,
   postsCount = 0,
 }: Props) {
-  const img = avatarUrl || '/avatar-writer.png'; // 既存の画像を流用
+  const img = avatarUrl || '/avatar-writer.png';
 
   return (
     <div className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:shadow-md">
@@ -46,11 +46,11 @@ export default function WriterCard({
         )}
       </div>
 
-      {/* 将来 author 詳細ページを作るなら /author/[slug] に差し替え */}
+      {/* AUTHOR リンクを /posts/author/[slug] に統一 */}
       {slug ? (
         <div className="mt-5">
           <Link
-            href={`/posts?author=${encodeURIComponent(slug)}`}
+            href={`/posts/author/${encodeURIComponent(slug)}`}
             className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
           >
             記事一覧を見る →

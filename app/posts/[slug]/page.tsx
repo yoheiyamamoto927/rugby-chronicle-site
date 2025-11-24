@@ -146,7 +146,7 @@ export default async function PostPage({
             <time dateTime={post.date}>{date}</time>
             <span className="mx-1">/</span>
             <Link
-              href={`/posts?author=${encodeURIComponent(authorSlug)}`}
+              href={`/posts/author/${encodeURIComponent(authorSlug)}`}
               className="hover:underline"
             >
               {authorName}
@@ -187,7 +187,7 @@ export default async function PostPage({
               />
               <div>
                 <Link
-                  href={`/posts?author=${encodeURIComponent(authorSlug)}`}
+                  href={`/posts/author/${encodeURIComponent(authorSlug)}`}
                   className="font-semibold text-neutral-900 hover:underline"
                 >
                   {authorName}
