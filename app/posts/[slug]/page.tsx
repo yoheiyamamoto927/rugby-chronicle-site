@@ -20,6 +20,12 @@ type PostData = {
   } | null;
 };
 
+// ★ author.slug → ライター用カテゴリー slug の対応表
+const WRITER_CATEGORY_BY_AUTHOR_SLUG: Record<string, string> = {
+  universis: "yamamoto-yohei",
+  "imamoto-takashi": "imamoto-takashi",
+};
+
 // --- Metadata（型エラー修正＋実データ取得対応）---
 export async function generateMetadata({
   params,
@@ -104,8 +110,12 @@ export default async function PostPage({
 
   const post = data.post;
 
-  const authorName = post.author?.node?.name ?? "yamamoto";
-  const authorSlug = post.author?.node?.slug ?? "yamamoto";
+  const authorName = post.author?.node?.name ?? "UNIVERSIS";
+  const authorSlug = post.author?.node?.slug ?? "universis";
+
+  // ★ ライター用カテゴリー slug
+  const writerCategorySlug =
+    WRITER_CATEGORY_BY_AUTHOR_SLUG[authorSlug] ?? null;
 
   const date = new Date(post.date).toLocaleDateString("ja-JP", {
     year: "numeric",
@@ -146,12 +156,15 @@ export default async function PostPage({
             <time dateTime={post.date}>{date}</time>
             <span className="mx-1">/</span>
             <Link
-  href={`/posts/author/${encodeURIComponent(authorSlug)}`}
-  className="hover:underline"
->
-  {authorName}
-</Link>
-
+              href={
+                writerCategorySlug
+                  ? `/category/${writerCategorySlug}`
+                  : "#"
+              }
+              className="hover:underline"
+            >
+              {authorName}
+            </Link>
 
             {post.categories?.nodes?.length ? (
               <>
@@ -189,13 +202,15 @@ export default async function PostPage({
               />
               <div>
                 <Link
-  href={`/posts/author/${encodeURIComponent(authorSlug)}`}
-  className="hover:underline"
->
-  {authorName}
-</Link>
-
-
+                  href={
+                    writerCategorySlug
+                      ? `/category/${writerCategorySlug}`
+                      : "#"
+                  }
+                  className="hover:underline"
+                >
+                  {authorName}
+                </Link>
                 <p className="text-sm text-neutral-600">
                   データと戦術のあいだを翻訳する人。UNIVERSIS／Rugby Analyzer。
                 </p>
