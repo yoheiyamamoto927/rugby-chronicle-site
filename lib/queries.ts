@@ -290,17 +290,15 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
 `;
 
 /** トップ一覧 offset ページネーション（authorName でフィルタ可能） */
+// offsetPagination を使わない安全版（全環境で動く）
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
-  query PostsWithOffsetPagination(
-    $size: Int!
-    $offset: Int!
-    $authorName: String
-  ) {
+  query PostsWithOffsetPagination($first: Int!, $after: String, $authorName: String) {
     posts(
+      first: $first
+      after: $after
       where: {
         status: PUBLISH
         orderby: { field: DATE, order: DESC }
-        offsetPagination: { size: $size, offset: $offset }
         authorName: $authorName
       }
     ) {
@@ -318,13 +316,13 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         }
       }
       pageInfo {
-        offsetPagination {
-          total
-        }
+        hasNextPage
+        endCursor
       }
     }
   }
 `;
+
 
 /** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
 export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `

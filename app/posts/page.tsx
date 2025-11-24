@@ -11,7 +11,7 @@ import {
 // 型定義
 // =========================
 type SearchParams = {
-  page?: string;
+  page?: string; // いまは未使用（今後拡張用）
   author?: string;
 };
 
@@ -48,16 +48,12 @@ export type WpPost = {
   };
 };
 
-type OffsetPaginationInfo = {
-  total?: number;
-  hasMore?: boolean;
-};
-
 type PostsWithOffsetPaginationResult = {
   posts: {
     nodes: WpPost[];
     pageInfo?: {
-      offsetPagination?: OffsetPaginationInfo;
+      hasNextPage: boolean;
+      endCursor?: string | null;
     };
   };
 };
@@ -79,15 +75,12 @@ export default async function PostsPage({
 }: {
   searchParams?: SearchParams;
 }) {
-  // page クエリを安全にパース（NaN や 0 以下なら 1 に補正）
-  const pageParam = searchParams?.page ?? "1";
-  const parsed = Number(pageParam);
-  const page = !Number.isNaN(parsed) && parsed > 0 ? parsed : 1;
-
   const authorSlug = searchParams?.author || null;
 
   let posts: WpPost[] = [];
-  let totalPages = 1;
+  // offsetPagination をやめたので、いまは常に 1 ページのみ表示
+  const page = 1;
+  const totalPages = 1;
 
   if (authorSlug) {
     // =========================
@@ -104,23 +97,16 @@ export default async function PostsPage({
     );
 
     posts = filtered;
-    totalPages = 1; // ひとまず 1 ページ表示（必要になったらここをページング対応に拡張）
   } else {
     // =========================
-    // ★ 通常一覧（ページネーション）
+    // ★ 通常一覧（先頭から PAGE_SIZE 件）
     // =========================
-    const offset = (page - 1) * PAGE_SIZE;
-
     const data = await gql<PostsWithOffsetPaginationResult>(
       POSTS_WITH_OFFSET_PAGINATION,
-      { size: PAGE_SIZE, offset }
+      { first: PAGE_SIZE }
     );
 
     posts = data?.posts?.nodes ?? [];
-
-    const total =
-      data?.posts?.pageInfo?.offsetPagination?.total ?? 0;
-    totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   }
 
   const authorName =
@@ -152,7 +138,7 @@ export default async function PostsPage({
         <ArticleList posts={posts} />
       )}
 
-      {/* ページネーション（ライター別のときはいったん非表示） */}
+      {/* offsetPagination をやめたので、いまはページネーション非表示 */}
       {!authorSlug && totalPages > 1 && (
         <nav
           className="mt-10 flex items-center justify-center gap-4 text-sm"
