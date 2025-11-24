@@ -20,10 +20,23 @@ export const POSTS = /* GraphQL */ `
             altText
           }
         }
+        author {
+          node {
+            name
+            slug
+          }
+        }
+        categories {
+          nodes {
+            name
+            slug
+          }
+        }
       }
     }
   }
 `;
+
 
 /** 記事1件（slug） */
 export const POST_BY_SLUG = /* GraphQL */ `

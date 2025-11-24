@@ -1,17 +1,13 @@
 // app/posts/page.tsx
-import Link from "next/link";
 import { gql } from "@/lib/wp";
 import ArticleList from "@/components/ArticleList";
-import { POSTS_WITH_OFFSET_PAGINATION } from "@/lib/queries";
+import { POSTS } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
-// =========================
-// 型定義
-// =========================
-type SearchParams = {
-  page?: string;
-  author?: string; // ← URL の ?author=ここ の値（ユーザー slug）
+// クエリパラメータの型
+type SearchParamsRaw = {
+  [key: string]: string | string[] | undefined;
 };
 
 type WpImage = {
@@ -37,7 +33,6 @@ export type WpPost = {
   title: string;
   date: string;
   excerpt?: string;
-  content?: string;
   author?: WpAuthor;
   featuredImage?: {
     node?: WpImage;
@@ -47,58 +42,62 @@ export type WpPost = {
   };
 };
 
-type PostsWithOffsetPaginationResult = {
+type PostsResult = {
   posts: {
     nodes: WpPost[];
-    pageInfo?: {
-      hasNextPage: boolean;
-      endCursor?: string | null;
-    };
   };
 };
 
 const PAGE_SIZE = 12;
 
-// =========================
-// ページコンポーネント
-// =========================
 export default async function PostsPage({
-  searchParams,
+  searchParams = {},
 }: {
-  searchParams?: SearchParams;
+  searchParams?: SearchParamsRaw;
 }) {
-  // page は今は使わない（後で cursor ページングを拡張する前提）
-  const pageParam = searchParams?.page ?? "1";
-  const parsed = Number(pageParam);
-  const page = !Number.isNaN(parsed) && parsed > 0 ? parsed : 1;
+  // -------------------------
+  // クエリパラメータ取得
+  // -------------------------
+  const authorParam = searchParams.author;
+  const authorSlug =
+    typeof authorParam === "string"
+      ? authorParam
+      : Array.isArray(authorParam)
+      ? authorParam[0]
+      : undefined;
 
-  // URL の ?author=universis みたいな値（WP ユーザー slug）
-  const authorSlug = searchParams?.author ?? null;
+  let posts: WpPost[] = [];
 
-  // GraphQL へクエリ投げる（authorSlug があれば authorName として渡す）
-  const data = await gql<PostsWithOffsetPaginationResult>(
-    POSTS_WITH_OFFSET_PAGINATION,
-    {
-      first: PAGE_SIZE,
-      authorName: authorSlug ?? undefined,
-    }
-  );
+  if (authorSlug) {
+    // =========================
+    // ライター別一覧：
+    // 全投稿を多めに取得して、Next 側で author.slug でフィルタ
+    // =========================
+    const data = await gql<PostsResult>(POSTS, { first: 100 });
+    const all = data?.posts?.nodes ?? [];
 
-  const posts = data?.posts?.nodes ?? [];
+    posts = all.filter(
+      (p) => p.author?.node?.slug === authorSlug
+    );
+  } else {
+    // =========================
+    // 通常の一覧：最新 PAGE_SIZE 件をそのまま表示
+    // =========================
+    const data = await gql<PostsResult>(POSTS, { first: PAGE_SIZE });
+    posts = data?.posts?.nodes ?? [];
+  }
 
-  // 見出し用のライター表示名
+  // 見出し用のライター名
   const authorName =
     authorSlug && posts[0]?.author?.node?.name
       ? posts[0].author!.node!.name
       : null;
 
-  const totalPages = 1; // 今は 1 ページ扱い
-
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
       {/* タイトル */}
       {authorSlug ? (
-        <h1 className="mb-6 text-2xl font-bold">
+        <h1 className="mb-4 text-2xl font-bold">
           ライター:
           <span className="ml-1">
             {authorName ?? authorSlug}
@@ -106,7 +105,7 @@ export default async function PostsPage({
           の記事一覧
         </h1>
       ) : (
-        <h1 className="mb-6 text-2xl font-bold">記事一覧</h1>
+        <h1 className="mb-4 text-2xl font-bold">記事一覧</h1>
       )}
 
       {/* 記事0件 */}
@@ -116,24 +115,6 @@ export default async function PostsPage({
         </p>
       ) : (
         <ArticleList posts={posts} />
-      )}
-
-      {/* ページネーション（今は無効扱い） */}
-      {!authorSlug && totalPages > 1 && (
-        <nav
-          className="mt-10 flex items-center justify-center gap-4 text-sm"
-          aria-label="ページネーション"
-        >
-          <span className="px-4 py-2 border border-transparent text-neutral-300">
-            ← 前へ
-          </span>
-          <span className="text-neutral-600">
-            {page} / {totalPages}
-          </span>
-          <span className="px-4 py-2 border border-transparent text-neutral-300">
-            次へ →
-          </span>
-        </nav>
       )}
     </section>
   );
