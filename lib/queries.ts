@@ -348,46 +348,7 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
 `;
 
 /** ★ライター別専用クエリ（今回追加） */
-/** ライター別の記事一覧（displayName でサーバー側フィルタ） */
-/** ライター別の記事一覧（displayName でサーバー側フィルタ） */
-export const POSTS_BY_AUTHOR = /* GraphQL */ `
-  query PostsByAuthor($first: Int = 50, $displayName: String!) {
-    posts(
-      first: $first
-      where: {
-        status: PUBLISH
-        orderby: { field: DATE, order: DESC }
-        authorName: $displayName
-      }
-    ) {
-      nodes {
-        id
-        slug
-        title
-        date
-        excerpt
-        author {
-          node {
-            name
-            slug
-          }
-        }
-        featuredImage {
-          node {
-            sourceUrl
-            altText
-          }
-        }
-        categories {
-          nodes {
-            name
-            slug
-          }
-        }
-      }
-    }
-  }
-`;
+
 
 
 
@@ -429,6 +390,7 @@ export const ALL_POST_SLUGS = /* GraphQL */ `
     }
   }
 `;
+/** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
 /** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
 export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `
   query PostsForAuthorView($first: Int!) {
