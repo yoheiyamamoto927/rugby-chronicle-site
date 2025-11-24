@@ -108,15 +108,15 @@ export default function GlobalMenu() {
                     </li>
                     <li>
                       <Link
-                        href={PAGE_LINKS.writer.href}
+                        href={PAGE_LINKS.writers.href}
                         onClick={() => setOpen(false)}
                         className="group flex items-baseline justify-between"
                       >
                         <span className="text-[18px] font-black text-neutral-900 group-hover:opacity-80">
-                          {PAGE_LINKS.writer.ja}
+                          {PAGE_LINKS.writers.ja}
                         </span>
                         <span className="text-xs font-medium tracking-widest text-neutral-400">
-                          {PAGE_LINKS.writer.en}
+                          {PAGE_LINKS.writers.en}
                         </span>
                       </Link>
                     </li>

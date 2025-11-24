@@ -26,7 +26,7 @@ export default function Header() {
     href="https://sportsconnect-lab.github.io/rugby-analyzer-site/"
     className="rounded-full bg-universis-blue px-3 py-1.5 text-xl font-semibold text-black hover:opacity-90"
   >
-    分析のご相談
+    分析依頼
   </a>
 </div>
 
