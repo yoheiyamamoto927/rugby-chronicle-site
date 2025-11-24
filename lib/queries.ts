@@ -1,7 +1,7 @@
 // lib/queries.ts
 // すべて「GraphQLクエリ文字列をexportするだけ」のファイルです。
 
-/** 記事一覧（新着順・トップ等で使用） */
+/** 記事一覧（新着順） */
 export const POSTS = /* GraphQL */ `
   query Posts($first: Int = 12) {
     posts(
@@ -14,7 +14,12 @@ export const POSTS = /* GraphQL */ `
         title
         date
         excerpt
-        featuredImage { node { sourceUrl altText } }
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
       }
     }
   }
@@ -29,16 +34,29 @@ export const POST_BY_SLUG = /* GraphQL */ `
       title
       date
       content(format: RENDERED)
+      excerpt
       author {
         node {
           name
           slug
           description
-          avatar { url }
+          avatar {
+            url
+          }
         }
       }
-      featuredImage { node { sourceUrl altText } }
-      categories { nodes { name slug } }
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
+      categories {
+        nodes {
+          name
+          slug
+        }
+      }
     }
   }
 `;
@@ -47,7 +65,9 @@ export const POST_BY_SLUG = /* GraphQL */ `
 export const SLUGS = /* GraphQL */ `
   query Slugs($first: Int = 100) {
     posts(first: $first, where: { status: PUBLISH }) {
-      nodes { slug }
+      nodes {
+        slug
+      }
     }
   }
 `;
@@ -74,7 +94,12 @@ export const CATEGORY_POSTS = /* GraphQL */ `
         title
         date
         excerpt
-        featuredImage { node { sourceUrl altText } }
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
       }
     }
   }
@@ -96,7 +121,12 @@ export const POSTS_BY_CATEGORY = /* GraphQL */ `
           title
           date
           excerpt
-          featuredImage { node { sourceUrl altText } }
+          featuredImage {
+            node {
+              sourceUrl
+              altText
+            }
+          }
         }
       }
     }
@@ -111,7 +141,13 @@ export const CATEGORY_PAGE = /* GraphQL */ `
       name
       slug
       description
-      children(first: 50) { nodes { id name slug } }
+      children(first: 50) {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
       posts(
         first: $first
         where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
@@ -122,8 +158,20 @@ export const CATEGORY_PAGE = /* GraphQL */ `
           title
           date
           excerpt
-          featuredImage { node { sourceUrl altText } }
-          categories { nodes { id name slug parentDatabaseId } }
+          featuredImage {
+            node {
+              sourceUrl
+              altText
+            }
+          }
+          categories {
+            nodes {
+              id
+              name
+              slug
+              parentDatabaseId
+            }
+          }
         }
       }
     }
@@ -137,7 +185,13 @@ export const CATEGORY_BY_SLUG = /* GraphQL */ `
       id
       name
       slug
-      children { nodes { id name slug } }
+      children {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
       posts(
         first: $first
         where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
@@ -148,7 +202,12 @@ export const CATEGORY_BY_SLUG = /* GraphQL */ `
           title
           date
           excerpt
-          featuredImage { node { sourceUrl altText } }
+          featuredImage {
+            node {
+              sourceUrl
+              altText
+            }
+          }
           categories {
             nodes {
               id
@@ -172,14 +231,20 @@ export const AUTHORS = /* GraphQL */ `
         name
         slug
         description
-        avatar { url }
-        posts(first: 1) { nodes { id } }
+        avatar {
+          url
+        }
+        posts(first: 1) {
+          nodes {
+            id
+          }
+        }
       }
     }
   }
 `;
 
-/** カテゴリー offset ページネーション（通常一覧用） */
+/** カテゴリー offset ページネーション */
 export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   query CategoryPostsWithOffset($slug: ID!, $size: Int!, $offset: Int!) {
     category(id: $slug, idType: SLUG) {
@@ -194,29 +259,49 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
           offsetPagination: { size: $size, offset: $offset }
         }
       ) {
-        pageInfo { offsetPagination { total } }
+        pageInfo {
+          offsetPagination {
+            total
+          }
+        }
         nodes {
           id
           slug
           title
           date
           excerpt
-          featuredImage { node { sourceUrl altText } }
-          categories { nodes { id name slug } }
+          featuredImage {
+            node {
+              sourceUrl
+              altText
+            }
+          }
+          categories {
+            nodes {
+              id
+              name
+              slug
+            }
+          }
         }
       }
     }
   }
 `;
 
-/** トップ記事一覧（offset ページネーション） */
+/** トップ一覧 offset ページネーション（authorName でフィルタ可能） */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
-  query PostsWithOffsetPagination($size: Int!, $offset: Int!) {
+  query PostsWithOffsetPagination(
+    $size: Int!
+    $offset: Int!
+    $authorName: String
+  ) {
     posts(
       where: {
         status: PUBLISH
         orderby: { field: DATE, order: DESC }
         offsetPagination: { size: $size, offset: $offset }
+        authorName: $authorName
       }
     ) {
       nodes {
@@ -225,38 +310,23 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         title
         date
         excerpt
-        featuredImage { node { sourceUrl altText } }
-        author { node { name slug } }
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
       }
-      pageInfo { offsetPagination { total } }
-    }
-  }
-`;
-
-/** ライター用の全件取得（author フィルタは Next 側で） */
-export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `
-  query PostsForAuthorView($first: Int = 100) {
-    posts(
-      first: $first
-      where: {
-        status: PUBLISH
-        orderby: { field: DATE, order: DESC }
-      }
-    ) {
-      nodes {
-        id
-        slug
-        title
-        date
-        excerpt
-        featuredImage { node { sourceUrl altText } }
-        author { node { name slug } }
+      pageInfo {
+        offsetPagination {
+          total
+        }
       }
     }
   }
 `;
 
-/** 指定したスラッグ配列で投稿取得 */
+/** 指定したスラッグ配列で投稿取得（キュレーション等で使用） */
 export const POSTS_BY_SLUGS = /* GraphQL */ `
   query PostsBySlugs($slugs: [String!]!) {
     posts(
@@ -272,12 +342,18 @@ export const POSTS_BY_SLUGS = /* GraphQL */ `
         title
         date
         excerpt
-        featuredImage { node { sourceUrl altText } }
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
       }
     }
   }
 `;
 
+/** 全投稿 slug 一覧（更新日付き） */
 export const ALL_POST_SLUGS = /* GraphQL */ `
   query AllPostSlugs($first: Int = 1000) {
     posts(first: $first, where: { status: PUBLISH }) {
