@@ -1,5 +1,5 @@
 // lib/queries.ts
-// すべて「GraphQLクエリ文字列をexportするだけ」のファイルです。
+// すべて「GraphQL クエリ文字列を export するだけ」のファイルです。
 
 /** 記事一覧（新着順） */
 export const POSTS = /* GraphQL */ `
@@ -37,8 +37,7 @@ export const POSTS = /* GraphQL */ `
   }
 `;
 
-
-/** 記事1件（slug） */
+/** 記事 1 件（slug） */
 export const POST_BY_SLUG = /* GraphQL */ `
   query GetPostBySlug($slug: ID!) {
     post(id: $slug, idType: SLUG) {
@@ -257,7 +256,7 @@ export const AUTHORS = /* GraphQL */ `
   }
 `;
 
-/** カテゴリーの記事一覧（cursor-based, offsetPaginationなし版） */
+/** カテゴリー offset ページネーション（cursor） */
 export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   query CategoryPostsWithOffset($slug: ID!, $first: Int = 12, $after: String) {
     category(id: $slug, idType: SLUG) {
@@ -268,10 +267,7 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
       posts(
         first: $first
         after: $after
-        where: {
-          status: PUBLISH
-          orderby: { field: DATE, order: DESC }
-        }
+        where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
       ) {
         pageInfo {
           hasNextPage
@@ -302,8 +298,7 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   }
 `;
 
-/** トップ一覧 offset ページネーション（authorName でフィルタ可能） */
-/** トップ＆ライター一覧（cursorベース、authorNameでフィルタ可能） */
+/** トップ＆ライター一覧（cursor） */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
   query PostsWithOffsetPagination(
     $first: Int!
@@ -352,13 +347,16 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
   }
 `;
 
-
-/** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
-export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `
-  query PostsForAuthorView($first: Int!) {
+/** ★ライター別専用クエリ（今回追加） */
+export const POSTS_BY_AUTHOR = /* GraphQL */ `
+  query PostsByAuthor($first: Int = 50, $displayName: String!) {
     posts(
       first: $first
-      where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
+      where: {
+        status: PUBLISH
+        orderby: { field: DATE, order: DESC }
+        authorName: $displayName
+      }
     ) {
       nodes {
         id
@@ -389,7 +387,8 @@ export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `
   }
 `;
 
-/** 指定したスラッグ配列で投稿取得（キュレーション等で使用） */
+
+/** 指定スラッグ配列で投稿取得 */
 export const POSTS_BY_SLUGS = /* GraphQL */ `
   query PostsBySlugs($slugs: [String!]!) {
     posts(
@@ -416,52 +415,13 @@ export const POSTS_BY_SLUGS = /* GraphQL */ `
   }
 `;
 
-/** 全投稿 slug 一覧（更新日付き） */
+/** 全投稿 slug 一覧 */
 export const ALL_POST_SLUGS = /* GraphQL */ `
   query AllPostSlugs($first: Int = 1000) {
     posts(first: $first, where: { status: PUBLISH }) {
       nodes {
         slug
         modified
-      }
-    }
-  }
-`;
-/** ライター別の記事一覧（authorName でサーバー側フィルタ） */
-export const POSTS_BY_AUTHOR = /* GraphQL */ `
-  query PostsByAuthor($first: Int = 50, $authorSlug: String!) {
-    posts(
-      first: $first
-      where: {
-        status: PUBLISH
-        orderby: { field: DATE, order: DESC }
-        authorName: $authorSlug
-      }
-    ) {
-      nodes {
-        id
-        slug
-        title
-        date
-        excerpt
-        author {
-          node {
-            name
-            slug
-          }
-        }
-        featuredImage {
-          node {
-            sourceUrl
-            altText
-          }
-        }
-        categories {
-          nodes {
-            name
-            slug
-          }
-        }
       }
     }
   }

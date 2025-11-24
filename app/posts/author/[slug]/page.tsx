@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string; // universis / imamoto-takashi など
+  slug: string; // universis / imamoto-takashi
 };
 
 type WpImage = {
@@ -48,21 +48,31 @@ type PostsByAuthorResult = {
   };
 };
 
+// ★ display_name（WP の authorName が使う値）との対応表
+const displayNameMap: Record<string, string> = {
+  universis: "YOHEI YAMAMOTO",
+  "imamoto-takashi": "IMAMOTO TAKASHI",
+};
+
 export default async function AuthorPostsPage({
   params,
 }: {
   params: Params;
 }) {
-  const authorSlug = params.slug; // URL の /posts/author/[slug]
+  const authorSlug = params.slug;
 
-  // 🔍 ライター slug でサーバー側フィルタ
+  // ★ displayName を確定（WPGraphQL の authorName 用）
+  const displayName =
+    displayNameMap[authorSlug] ?? authorSlug; // slug が無い場合 fallback
+
+  // ★ displayName でフィルタして記事取得
   const data = await gql<PostsByAuthorResult>(POSTS_BY_AUTHOR, {
     first: 100,
-    authorSlug,
+    displayName,
   });
 
   const posts = data?.posts?.nodes ?? [];
-  const authorName = posts[0]?.author?.node?.name ?? authorSlug;
+  const authorName = posts[0]?.author?.node?.name ?? displayName;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
@@ -73,9 +83,7 @@ export default async function AuthorPostsPage({
       </h1>
 
       {posts.length === 0 ? (
-        <p className="text-sm text-neutral-500">
-          まだ記事がありません。
-        </p>
+        <p className="text-sm text-neutral-500">まだ記事がありません。</p>
       ) : (
         <ArticleList posts={posts} />
       )}
