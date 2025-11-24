@@ -244,25 +244,25 @@ export const AUTHORS = /* GraphQL */ `
   }
 `;
 
-/** カテゴリー offset ページネーション */
+/** カテゴリーの記事一覧（cursor-based, offsetPaginationなし版） */
 export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
-  query CategoryPostsWithOffset($slug: ID!, $size: Int!, $offset: Int!) {
+  query CategoryPostsWithOffset($slug: ID!, $first: Int = 12, $after: String) {
     category(id: $slug, idType: SLUG) {
       id
       name
       slug
       description
       posts(
+        first: $first
+        after: $after
         where: {
           status: PUBLISH
           orderby: { field: DATE, order: DESC }
-          offsetPagination: { size: $size, offset: $offset }
         }
       ) {
         pageInfo {
-          offsetPagination {
-            total
-          }
+          hasNextPage
+          endCursor
         }
         nodes {
           id
