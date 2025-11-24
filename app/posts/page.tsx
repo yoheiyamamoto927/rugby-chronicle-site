@@ -7,6 +7,11 @@ import {
   POSTS_FOR_AUTHOR_VIEW,
 } from "@/lib/queries";
 
+
+// ★ クエリパラメータ(author)ごとに毎回描画させる
+export const dynamic = "force-dynamic";
+
+
 // =========================
 // 型定義
 // =========================
