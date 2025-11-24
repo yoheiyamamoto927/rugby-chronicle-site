@@ -7,16 +7,6 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string; // URL の /posts/author/[slug] 部分（universis / imamoto-takashi）
-};
-
-type WpImage = {
-  sourceUrl?: string;
-  altText?: string;
-};
-
-type WpCategory = {
-  name: string;
   slug: string;
 };
 
@@ -27,54 +17,30 @@ type WpAuthor = {
   };
 };
 
-export type WpPost = {
-  id: string;
-  slug: string;
-  title: string;
-  date: string;
-  excerpt?: string;
-  author?: WpAuthor;
-  featuredImage?: {
-    node?: WpImage;
-  };
-  categories?: {
-    nodes: WpCategory[];
-  };
-};
-
-type PostsByAuthorResult = {
-  posts: {
-    nodes: WpPost[];
-  };
-};
-
-// URL の slug → WP の displayName を対応させるマップ
-const displayNameMap: Record<string, string> = {
-  universis: "YOHEI YAMAMOTO",
-  "imamoto-takashi": "IMAMOTO TAKASHI",
-};
-
 export default async function AuthorPostsPage({
   params,
 }: {
   params: Params;
 }) {
-  // /posts/author/[slug] の [slug]
   const authorSlug = params.slug;
 
-  // GraphQL に渡す表示名（見つからなければ slug をそのまま使う）
+  // 🔥 WP の displayName に変換
+  const displayNameMap: Record<string, string> = {
+    universis: "YOHEI YAMAMOTO",
+    "imamoto-takashi": "IMAMOTO TAKASHI",
+  };
   const displayName = displayNameMap[authorSlug] ?? authorSlug;
 
-  // 🔍 ライター displayName でサーバー側フィルタ
-  const data = await gql<PostsByAuthorResult>(POSTS_BY_AUTHOR, {
+  // 🔥 GraphQL に渡すのは "displayName" だけ
+  const data = await gql(POSTS_BY_AUTHOR, {
     first: 100,
-    displayName,
+    displayName,   // ←←← 絶対これ！！
   });
 
   const posts = data?.posts?.nodes ?? [];
 
-  // 見出し用の名前（WP 側にあればそれを優先）
-  const authorName = posts[0]?.author?.node?.name ?? displayName;
+  const authorName =
+    posts[0]?.author?.node?.name ?? displayName;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
