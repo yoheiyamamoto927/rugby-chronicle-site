@@ -1,14 +1,13 @@
-// app/posts/page.tsx
+// app/posts/author/[slug]/page.tsx
 import { gql } from "@/lib/wp";
 import ArticleList from "@/components/ArticleList";
-import { POSTS } from "@/lib/queries";
+import { POSTS_BY_AUTHOR } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// クエリパラメータの型
-type SearchParams = {
-  [key: string]: string | string[] | undefined;
+type Params = {
+  slug: string; // universis / imamoto-takashi など
 };
 
 type WpImage = {
@@ -43,78 +42,49 @@ export type WpPost = {
   };
 };
 
-type PostsResult = {
+type PostsByAuthorResult = {
   posts: {
     nodes: WpPost[];
   };
 };
 
-const PAGE_SIZE = 12;
+// WP の「著者名」と URL スラッグのマッピング
+const displayNameMap: Record<string, string> = {
+  universis: "YOHEI YAMAMOTO",
+  "imamoto-takashi": "IMAMOTO TAKASHI",
+};
 
-export default async function PostsPage({
-  searchParams,
+export default async function AuthorPostsPage({
+  params,
 }: {
-  searchParams: SearchParams;
+  params: Params;
 }) {
-  // -------------------------
-  // クエリパラメータ取得
-  // -------------------------
-  const authorParam = searchParams?.author;
-  const authorSlug =
-    typeof authorParam === "string"
-      ? authorParam
-      : Array.isArray(authorParam)
-      ? authorParam[0]
-      : undefined;
+  // /posts/author/[slug] の [slug]
+  const authorSlug = params.slug;
 
-  let posts: WpPost[] = [];
+  // GraphQL の authorName に渡す値（WP上の表示名）
+  const authorNameArg = displayNameMap[authorSlug] ?? authorSlug;
 
-  if (authorSlug) {
-    // =========================
-    // ライター別一覧：
-    // 全投稿を多めに取得して、Next 側で author.slug でフィルタ
-    // =========================
-    const data = await gql<PostsResult>(POSTS, { first: 100 });
-    const all = data?.posts?.nodes ?? [];
+  // 🔍 ライター名でサーバー側フィルタ
+  const data = await gql<PostsByAuthorResult>(POSTS_BY_AUTHOR, {
+    first: 100,
+    // ❗ここは必ず authorSlug というキー名で渡す（クエリ定義と一致させる）
+    authorSlug: authorNameArg,
+  });
 
-    posts = all.filter(
-      (p) => p.author?.node?.slug === authorSlug
-    );
-  } else {
-    // =========================
-    // 通常の一覧：最新 PAGE_SIZE 件をそのまま表示
-    // =========================
-    const data = await gql<PostsResult>(POSTS, { first: PAGE_SIZE });
-    posts = data?.posts?.nodes ?? [];
-  }
+  const posts = data?.posts?.nodes ?? [];
 
-  // 見出し用のライター名
-  const authorName =
-    authorSlug && posts[0]?.author?.node?.name
-      ? posts[0].author!.node!.name
-      : null;
+  // 画面に出す見出し用の名前
+  const headingName = displayNameMap[authorSlug] ?? posts[0]?.author?.node?.name ?? authorSlug;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
-      {/* タイトル */}
-      {authorSlug ? (
-        <h1 className="mb-2 text-2xl font-bold">
-          ライター:
-          <span className="ml-1">
-            {authorName ?? authorSlug}
-          </span>
-          の記事一覧
-        </h1>
-      ) : (
-        <h1 className="mb-2 text-2xl font-bold">記事一覧</h1>
-      )}
+      <h1 className="mb-4 text-2xl font-bold">
+        ライター:
+        <span className="ml-1">{headingName}</span>
+        の記事一覧
+      </h1>
 
-      {/* ★ デバッグ用：いまの authorSlug を一旦表示（動いたら消してOK） */}
-      <p className="mb-4 text-xs text-neutral-400">
-        authorSlug: {authorSlug ?? "(なし)"}
-      </p>
-
-      {/* 記事0件 */}
       {posts.length === 0 ? (
         <p className="text-sm text-neutral-500">
           まだ記事がありません。
