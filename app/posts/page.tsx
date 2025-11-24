@@ -7,16 +7,14 @@ import {
   POSTS_FOR_AUTHOR_VIEW,
 } from "@/lib/queries";
 
-
-// ★ クエリパラメータ(author)ごとに毎回描画させる
+// ★ クエリパラメータごとにページを再生成させる
 export const dynamic = "force-dynamic";
-
 
 // =========================
 // 型定義
 // =========================
 type SearchParams = {
-  page?: string; // いまは未使用（今後拡張用）
+  page?: string;
   author?: string;
 };
 
@@ -53,12 +51,16 @@ export type WpPost = {
   };
 };
 
+type OffsetPaginationInfo = {
+  total?: number;
+  hasMore?: boolean;
+};
+
 type PostsWithOffsetPaginationResult = {
   posts: {
     nodes: WpPost[];
     pageInfo?: {
-      hasNextPage: boolean;
-      endCursor?: string | null;
+      offsetPagination?: OffsetPaginationInfo;
     };
   };
 };
@@ -69,7 +71,6 @@ type PostsForAuthorViewResult = {
   };
 };
 
-// 1ページあたりの件数
 const PAGE_SIZE = 12;
 
 // =========================
@@ -80,61 +81,68 @@ export default async function PostsPage({
 }: {
   searchParams?: SearchParams;
 }) {
-  const authorSlug = searchParams?.author || null;
+  // page クエリ処理
+  const pageParam = searchParams?.page ?? "1";
+  const parsed = Number(pageParam);
+  const page = !Number.isNaN(parsed) && parsed > 0 ? parsed : 1;
+
+  // ★ この値を「フルネーム」で受け取る
+  // 例: /posts?author=YOHEI%20YAMAMOTO
+  const authorNameParam = searchParams?.author || null;
 
   let posts: WpPost[] = [];
-  // offsetPagination をやめたので、いまは常に 1 ページのみ表示
-  const page = 1;
-  const totalPages = 1;
+  let totalPages = 1;
 
-  if (authorSlug) {
+  if (authorNameParam) {
     // =========================
-    // ★ ライター別一覧
-    // GraphQL 側から多めに取得して slug で絞る
+    // ★ ライター別一覧（表示名 name でフィルタ）
     // =========================
     const data = await gql<PostsForAuthorViewResult>(POSTS_FOR_AUTHOR_VIEW, {
-      first: 100,
+      first: 200,
     });
 
     const all = data?.posts?.nodes ?? [];
+
     const filtered = all.filter(
-      (p) => p.author?.node?.slug === authorSlug
+      (p) => p.author?.node?.name === authorNameParam
     );
 
     posts = filtered;
+    totalPages = 1;
   } else {
     // =========================
-    // ★ 通常一覧（先頭から PAGE_SIZE 件）
+    // ★ 通常一覧（ページネーション）
     // =========================
+    const offset = (page - 1) * PAGE_SIZE;
+
     const data = await gql<PostsWithOffsetPaginationResult>(
       POSTS_WITH_OFFSET_PAGINATION,
-      { first: PAGE_SIZE }
+      { size: PAGE_SIZE, offset }
     );
 
     posts = data?.posts?.nodes ?? [];
+    const total =
+      data?.posts?.pageInfo?.offsetPagination?.total ?? 0;
+
+    totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   }
 
-  const authorName =
-    authorSlug && posts[0]?.author?.node?.name
-      ? posts[0].author!.node!.name
-      : null;
+  // タイトル表示用
+  const authorName = authorNameParam;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
+
       {/* タイトル */}
-      {authorSlug ? (
+      {authorName ? (
         <h1 className="mb-6 text-2xl font-bold">
-          ライター:
-          <span className="ml-1">
-            {authorName ?? authorSlug}
-          </span>
-          の記事一覧
+          ライター: <span className="ml-1">{authorName}</span> の記事一覧
         </h1>
       ) : (
         <h1 className="mb-6 text-2xl font-bold">記事一覧</h1>
       )}
 
-      {/* 記事0件時のフォールバック */}
+      {/* 記事0件 */}
       {posts.length === 0 ? (
         <p className="text-sm text-neutral-500">
           まだ記事がありません。
@@ -143,27 +151,27 @@ export default async function PostsPage({
         <ArticleList posts={posts} />
       )}
 
-      {/* offsetPagination をやめたので、いまはページネーション非表示 */}
-      {!authorSlug && totalPages > 1 && (
+      {/* ページネーション（ライター別は非表示） */}
+      {!authorName && totalPages > 1 && (
         <nav
           className="mt-10 flex items-center justify-center gap-4 text-sm"
-          aria-label="記事一覧のページネーション"
+          aria-label="ページネーション"
         >
           {/* 前へ */}
           {page > 1 ? (
             <Link
               href={page - 1 === 1 ? "/posts" : `/posts?page=${page - 1}`}
-              className="px-4 py-2 rounded border hover:bg-neutral-50"
+              className="px-4 py-2 border rounded hover:bg-neutral-50"
             >
               ← 前へ
             </Link>
           ) : (
-            <span className="px-4 py-2 rounded border border-transparent text-neutral-300">
+            <span className="px-4 py-2 border border-transparent text-neutral-300">
               ← 前へ
             </span>
           )}
 
-          {/* 現在ページ / 総ページ */}
+          {/* 現在ページ */}
           <span className="text-neutral-600">
             {page} / {totalPages}
           </span>
@@ -172,12 +180,12 @@ export default async function PostsPage({
           {page < totalPages ? (
             <Link
               href={`/posts?page=${page + 1}`}
-              className="px-4 py-2 rounded border hover:bg-neutral-50"
+              className="px-4 py-2 border rounded hover:bg-neutral-50"
             >
               次へ →
             </Link>
           ) : (
-            <span className="px-4 py-2 rounded border border-transparent text-neutral-300">
+            <span className="px-4 py-2 border border-transparent text-neutral-300">
               次へ →
             </span>
           )}
