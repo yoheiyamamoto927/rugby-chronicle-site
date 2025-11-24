@@ -214,14 +214,20 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
  * → offsetPagination は使わず、first: 100 だけ取得して
  *   Next.js 側でページング＆著者フィルタを行う
  */
+/** トップ一覧 offset ページネーション＋著者フィルタ */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
-  query PostsWithSimplePagination($first: Int = 100) {
+  query PostsWithOffsetPagination(
+    $size: Int!
+    $offset: Int!
+    $authorName: String
+  ) {
     posts(
-      first: $first
       where: {
         status: PUBLISH
         orderby: { field: DATE, order: DESC }
+        authorName: $authorName
       }
+      offsetPagination: { size: $size, offset: $offset }
     ) {
       nodes {
         id
@@ -230,11 +236,12 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
-        author { node { name slug } }
       }
+      pageInfo { offsetPagination { total } }
     }
   }
 `;
+
 
 /** 指定したスラッグ配列で投稿取得 */
 export const POSTS_BY_SLUGS = /* GraphQL */ `

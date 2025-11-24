@@ -139,16 +139,14 @@ export default async function PostPage({
 
       {/* 本文＋サイドバー */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-10 sm:px-6 lg:px-8 xl:grid-cols-12">
-        
         {/* 本文 */}
         <article className="xl:col-span-8">
-
-          {/* 日付 & 著者リンク（←ここ変更済み） */}
+          {/* 日付 & 著者リンク */}
           <div className="mb-3 text-sm text-neutral-500">
             <time dateTime={post.date}>{date}</time>
             <span className="mx-1">/</span>
             <Link
-              href={`/posts?author=${authorSlug}`}
+              href={`/posts?author=${encodeURIComponent(authorSlug)}`}
               className="hover:underline"
             >
               {authorName}
@@ -189,7 +187,7 @@ export default async function PostPage({
               />
               <div>
                 <Link
-                  href={`/posts?author=${authorSlug}`}
+                  href={`/posts?author=${encodeURIComponent(authorSlug)}`}
                   className="font-semibold text-neutral-900 hover:underline"
                 >
                   {authorName}
@@ -204,6 +202,7 @@ export default async function PostPage({
 
         {/* サイドバー */}
         <aside className="xl:col-span-4 relative">
+          {/* 目次 */}
           {toc.length > 0 && (
             <nav className="mb-8" aria-label="目次">
               <div className="mb-3 text-xs font-semibold text-neutral-500">
@@ -267,7 +266,7 @@ export default async function PostPage({
               </div>
             </div>
 
-            {/* JSON-LD */}
+            {/* JSON-LD 構造化データ */}
             <script
               type="application/ld+json"
               dangerouslySetInnerHTML={{
