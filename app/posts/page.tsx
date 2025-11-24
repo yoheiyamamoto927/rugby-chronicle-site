@@ -4,9 +4,10 @@ import ArticleList from "@/components/ArticleList";
 import { POSTS } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // クエリパラメータの型
-type SearchParamsRaw = {
+type SearchParams = {
   [key: string]: string | string[] | undefined;
 };
 
@@ -51,14 +52,14 @@ type PostsResult = {
 const PAGE_SIZE = 12;
 
 export default async function PostsPage({
-  searchParams = {},
+  searchParams,
 }: {
-  searchParams?: SearchParamsRaw;
+  searchParams: SearchParams;
 }) {
   // -------------------------
   // クエリパラメータ取得
   // -------------------------
-  const authorParam = searchParams.author;
+  const authorParam = searchParams?.author;
   const authorSlug =
     typeof authorParam === "string"
       ? authorParam
@@ -97,7 +98,7 @@ export default async function PostsPage({
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
       {/* タイトル */}
       {authorSlug ? (
-        <h1 className="mb-4 text-2xl font-bold">
+        <h1 className="mb-2 text-2xl font-bold">
           ライター:
           <span className="ml-1">
             {authorName ?? authorSlug}
@@ -105,8 +106,13 @@ export default async function PostsPage({
           の記事一覧
         </h1>
       ) : (
-        <h1 className="mb-4 text-2xl font-bold">記事一覧</h1>
+        <h1 className="mb-2 text-2xl font-bold">記事一覧</h1>
       )}
+
+      {/* ★ デバッグ用：いまの authorSlug を一旦表示（動いたら消してOK） */}
+      <p className="mb-4 text-xs text-neutral-400">
+        authorSlug: {authorSlug ?? "(なし)"}
+      </p>
 
       {/* 記事0件 */}
       {posts.length === 0 ? (
