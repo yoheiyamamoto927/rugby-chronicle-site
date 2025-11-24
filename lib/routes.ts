@@ -13,7 +13,7 @@ export const CATEGORY_LINKS = [
 
 /** 固定ページ/外部リンク */
 export const PAGE_LINKS = {
-  writer:        { en: 'WRITER',           ja: 'ライター',                    href: '/writer' },
+  writer:        { en: 'WRITER',           ja: 'ライター',                    href: '/writers' },
   about:         { en: 'ABOUT',            ja: 'UNIVERSISとは',               href: '/about' },
   rugbyAnalyzer: { en: 'RUGBY ANALYZER',   ja: '分析依頼（Rugby Analyzer）', href: 'https://sportsconnect-lab.github.io/rugby-analyzer-site/', external: true },
 
