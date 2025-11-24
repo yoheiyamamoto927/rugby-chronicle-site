@@ -1,12 +1,23 @@
 // app/posts/author/[slug]/page.tsx
 import { gql } from "@/lib/wp";
 import ArticleList from "@/components/ArticleList";
-import { POSTS_BY_AUTHOR } from "@/lib/queries";
+import { POSTS_FOR_AUTHOR_VIEW } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
+  // /posts/author/[slug] の [slug] 部分
+  slug: string; // 例: "universis" / "imamoto-takashi"
+};
+
+type WpImage = {
+  sourceUrl?: string;
+  altText?: string;
+};
+
+type WpCategory = {
+  name: string;
   slug: string;
 };
 
@@ -17,30 +28,48 @@ type WpAuthor = {
   };
 };
 
+export type WpPost = {
+  id: string;
+  slug: string;
+  title: string;
+  date: string;
+  excerpt?: string;
+  author?: WpAuthor;
+  featuredImage?: {
+    node?: WpImage;
+  };
+  categories?: {
+    nodes: WpCategory[];
+  };
+};
+
+type PostsForAuthorResult = {
+  posts: {
+    nodes: WpPost[];
+  };
+};
+
 export default async function AuthorPostsPage({
   params,
 }: {
   params: Params;
 }) {
-  const authorSlug = params.slug;
+  const authorSlug = params.slug; // "universis" / "imamoto-takashi"
 
-  // 🔥 WP の displayName に変換
-  const displayNameMap: Record<string, string> = {
-    universis: "YOHEI YAMAMOTO",
-    "imamoto-takashi": "IMAMOTO TAKASHI",
-  };
-  const displayName = displayNameMap[authorSlug] ?? authorSlug;
-
-  // 🔥 GraphQL に渡すのは "displayName" だけ
-  const data = await gql(POSTS_BY_AUTHOR, {
+  // 1) 全投稿をまとめて取得（author 情報付き）
+  const data = await gql<PostsForAuthorResult>(POSTS_FOR_AUTHOR_VIEW, {
     first: 100,
-    displayName,   // ←←← 絶対これ！！
   });
 
-  const posts = data?.posts?.nodes ?? [];
+  const all = data?.posts?.nodes ?? [];
 
-  const authorName =
-    posts[0]?.author?.node?.name ?? displayName;
+  // 2) Next 側でライター slug で絞り込み
+  const posts = all.filter(
+    (p) => p.author?.node?.slug === authorSlug
+  );
+
+  // 3) 見出し用のライター名（WP の name は "YOHEI YAMAMOTO" など）
+  const authorName = posts[0]?.author?.node?.name ?? authorSlug;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">

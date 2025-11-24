@@ -429,3 +429,38 @@ export const ALL_POST_SLUGS = /* GraphQL */ `
     }
   }
 `;
+/** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
+export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `
+  query PostsForAuthorView($first: Int!) {
+    posts(
+      first: $first
+      where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
+    ) {
+      nodes {
+        id
+        slug
+        title
+        date
+        excerpt
+        author {
+          node {
+            name
+            slug
+          }
+        }
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        categories {
+          nodes {
+            name
+            slug
+          }
+        }
+      }
+    }
+  }
+`;
