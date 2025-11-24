@@ -1,13 +1,13 @@
 // app/posts/author/[slug]/page.tsx
 import { gql } from "@/lib/wp";
 import ArticleList from "@/components/ArticleList";
-import { POSTS_FOR_AUTHOR_VIEW } from "@/lib/queries";
+import { POSTS_BY_AUTHOR } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string;
+  slug: string; // URL上の universis / imamoto-takashi
 };
 
 type WpImage = {
@@ -20,11 +20,13 @@ type WpCategory = {
   slug: string;
 };
 
+type WpAuthorNode = {
+  name?: string;
+  slug?: string;
+};
+
 type WpAuthor = {
-  node?: {
-    name?: string;
-    slug?: string;
-  };
+  node?: WpAuthorNode;
 };
 
 export type WpPost = {
@@ -42,7 +44,7 @@ export type WpPost = {
   };
 };
 
-type PostsForAuthorResult = {
+type PostsByAuthorResult = {
   posts: {
     nodes: WpPost[];
   };
@@ -53,23 +55,16 @@ export default async function AuthorPostsPage({
 }: {
   params: Params;
 }) {
-  const authorSlug = params.slug;
+  const authorSlug = params.slug; // /posts/author/[slug] の slug
 
-  // WP から全投稿を取得（author フィルタなし）
-  const data = await gql<PostsForAuthorResult>(POSTS_FOR_AUTHOR_VIEW, {
+  // WPGraphQL では authorName に「ユーザーの slug」を渡すと絞り込める
+  const data = await gql<PostsByAuthorResult>(POSTS_BY_AUTHOR, {
     first: 100,
+    authorSlug,
   });
 
-  const allPosts = data?.posts?.nodes ?? [];
-
-  // Next.js 側で slug を使ってフィルタ
-  const posts = allPosts.filter(
-    (p) => p.author?.node?.slug === authorSlug
-  );
-
-  // 見出し用：記事がある場合は WP の author 名、無い場合 slug を表示
-  const authorName =
-    posts[0]?.author?.node?.name ?? authorSlug;
+  const posts = data?.posts?.nodes ?? [];
+  const authorName = posts[0]?.author?.node?.name ?? authorSlug;
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
