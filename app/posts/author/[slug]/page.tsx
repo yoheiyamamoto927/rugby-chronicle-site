@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string; // URL上の universis / imamoto-takashi など
+  slug: string;
 };
 
 type WpImage = {
@@ -53,21 +53,21 @@ export default async function AuthorPostsPage({
 }: {
   params: Params;
 }) {
-  const authorSlug = params.slug; // /posts/author/[slug] の slug
+  const authorSlug = params.slug;
 
-  // ① 全投稿（最大100件）を取得
+  // WP から全投稿を取得（author フィルタなし）
   const data = await gql<PostsForAuthorResult>(POSTS_FOR_AUTHOR_VIEW, {
     first: 100,
   });
 
   const allPosts = data?.posts?.nodes ?? [];
 
-  // ② author.slug で絞り込み
+  // Next.js 側で slug を使ってフィルタ
   const posts = allPosts.filter(
     (p) => p.author?.node?.slug === authorSlug
   );
 
-  // 見出し用の名前（投稿から引っ張る）
+  // 見出し用：記事がある場合は WP の author 名、無い場合 slug を表示
   const authorName =
     posts[0]?.author?.node?.name ?? authorSlug;
 

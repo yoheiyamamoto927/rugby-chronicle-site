@@ -390,10 +390,10 @@ export const ALL_POST_SLUGS = /* GraphQL */ `
     }
   }
 `;
-/** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
+
 /** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
 export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `
-  query PostsForAuthorView($first: Int!) {
+  query PostsForAuthorView($first: Int = 100) {
     posts(
       first: $first
       where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
