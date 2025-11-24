@@ -290,9 +290,13 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
 `;
 
 /** トップ一覧 offset ページネーション（authorName でフィルタ可能） */
-// offsetPagination を使わない安全版（全環境で動く）
+/** トップ＆ライター一覧（cursorベース、authorNameでフィルタ可能） */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
-  query PostsWithOffsetPagination($first: Int!, $after: String, $authorName: String) {
+  query PostsWithOffsetPagination(
+    $first: Int!
+    $after: String
+    $authorName: String
+  ) {
     posts(
       first: $first
       after: $after
@@ -308,10 +312,22 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         title
         date
         excerpt
+        author {
+          node {
+            name
+            slug
+          }
+        }
         featuredImage {
           node {
             sourceUrl
             altText
+          }
+        }
+        categories {
+          nodes {
+            name
+            slug
           }
         }
       }
