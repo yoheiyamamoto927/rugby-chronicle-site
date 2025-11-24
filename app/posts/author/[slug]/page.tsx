@@ -1,13 +1,13 @@
 // app/posts/author/[slug]/page.tsx
 import { gql } from "@/lib/wp";
 import ArticleList from "@/components/ArticleList";
-import { POSTS_BY_AUTHOR } from "@/lib/queries";
+import { POSTS_FOR_AUTHOR_VIEW } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string; // URL上の universis / imamoto-takashi
+  slug: string; // URL上の universis / imamoto-takashi など
 };
 
 type WpImage = {
@@ -20,13 +20,11 @@ type WpCategory = {
   slug: string;
 };
 
-type WpAuthorNode = {
-  name?: string;
-  slug?: string;
-};
-
 type WpAuthor = {
-  node?: WpAuthorNode;
+  node?: {
+    name?: string;
+    slug?: string;
+  };
 };
 
 export type WpPost = {
@@ -44,7 +42,7 @@ export type WpPost = {
   };
 };
 
-type PostsByAuthorResult = {
+type PostsForAuthorResult = {
   posts: {
     nodes: WpPost[];
   };
@@ -57,13 +55,19 @@ export default async function AuthorPostsPage({
 }) {
   const authorSlug = params.slug; // /posts/author/[slug] の slug
 
-  // WPGraphQL では authorName に「ユーザーの slug」を渡すと絞り込める
-  const data = await gql<PostsByAuthorResult>(POSTS_BY_AUTHOR, {
+  // ① 全投稿（最大100件）を取得（ここでは authorSlug などの変数は渡さない）
+  const data = await gql<PostsForAuthorResult>(POSTS_FOR_AUTHOR_VIEW, {
     first: 100,
-    authorSlug,
   });
 
-  const posts = data?.posts?.nodes ?? [];
+  const allPosts = data?.posts?.nodes ?? [];
+
+  // ② WordPress の author.slug と URL の slug を突き合わせて絞り込み
+  const posts = allPosts.filter(
+    (p) => p.author?.node?.slug === authorSlug
+  );
+
+  // 見出し用の名前（投稿から取得）
   const authorName = posts[0]?.author?.node?.name ?? authorSlug;
 
   return (

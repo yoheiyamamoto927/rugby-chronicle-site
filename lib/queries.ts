@@ -392,16 +392,13 @@ export const ALL_POST_SLUGS = /* GraphQL */ `
 `;
 
 /** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
-/** ライター別の記事一覧（authorName でサーバー側フィルタ） */
-export const POSTS_BY_AUTHOR = /* GraphQL */ `
-  query PostsByAuthor($first: Int = 50, $authorSlug: String!) {
+
+/** ★ライター別一覧用：全投稿を author 情報付きで取得（Next 側で絞り込み） */
+export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `
+  query PostsForAuthorView($first: Int!) {
     posts(
       first: $first
-      where: {
-        status: PUBLISH
-        orderby: { field: DATE, order: DESC }
-        authorName: $authorSlug
-      }
+      where: { status: PUBLISH, orderby: { field: DATE, order: DESC } }
     ) {
       nodes {
         id
