@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = {
-  slug: string; // universis / imamoto-takashi
+  slug: string; // universis / imamoto-takashi など
 };
 
 type WpImage = {
@@ -48,24 +48,22 @@ type PostsByAuthorResult = {
   };
 };
 
-// ★ display_name（WP の authorName が使う値）との対応表
-const displayNameMap: Record<string, string> = {
-  universis: "YOHEI YAMAMOTO",
-  "imamoto-takashi": "IMAMOTO TAKASHI",
-};
-
 export default async function AuthorPostsPage({
   params,
 }: {
   params: Params;
 }) {
-  const authorSlug = params.slug;
+  const authorSlug = params.slug; // /posts/author/[slug] の slug
 
-  // ★ displayName を確定（WPGraphQL の authorName 用）
-  const displayName =
-    displayNameMap[authorSlug] ?? authorSlug; // slug が無い場合 fallback
+  // URL の slug → WordPress の displayName に変換
+  const displayNameMap: Record<string, string> = {
+    universis: "YOHEI YAMAMOTO",
+    "imamoto-takashi": "IMAMOTO TAKASHI",
+  };
 
-  // ★ displayName でフィルタして記事取得
+  const displayName = displayNameMap[authorSlug] ?? authorSlug;
+
+  // 🔍 displayName を GraphQL の $displayName として渡す
   const data = await gql<PostsByAuthorResult>(POSTS_BY_AUTHOR, {
     first: 100,
     displayName,
@@ -83,7 +81,9 @@ export default async function AuthorPostsPage({
       </h1>
 
       {posts.length === 0 ? (
-        <p className="text-sm text-neutral-500">まだ記事がありません。</p>
+        <p className="text-sm text-neutral-500">
+          まだ記事がありません。
+        </p>
       ) : (
         <ArticleList posts={posts} />
       )}

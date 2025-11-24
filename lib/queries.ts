@@ -348,6 +348,7 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
 `;
 
 /** ★ライター別専用クエリ（今回追加） */
+/** ライター別の記事一覧（displayName でサーバー側フィルタ） */
 export const POSTS_BY_AUTHOR = /* GraphQL */ `
   query PostsByAuthor($first: Int = 50, $displayName: String!) {
     posts(
@@ -386,6 +387,7 @@ export const POSTS_BY_AUTHOR = /* GraphQL */ `
     }
   }
 `;
+
 
 
 /** 指定スラッグ配列で投稿取得 */
