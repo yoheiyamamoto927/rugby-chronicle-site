@@ -1,7 +1,7 @@
 // lib/queries.ts
 // すべて「GraphQLクエリ文字列をexportするだけ」のファイルです。
 
-/** 記事一覧（新着順） */
+/** 記事一覧（新着順・トップ等で使用） */
 export const POSTS = /* GraphQL */ `
   query Posts($first: Int = 12) {
     posts(
@@ -179,7 +179,7 @@ export const AUTHORS = /* GraphQL */ `
   }
 `;
 
-/** カテゴリー offset ページネーション（これは今まで通り offsetPagination 使う） */
+/** カテゴリー offset ページネーション（通常一覧用） */
 export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   query CategoryPostsWithOffset($slug: ID!, $size: Int!, $offset: Int!) {
     category(id: $slug, idType: SLUG) {
@@ -209,25 +209,15 @@ export const CATEGORY_POSTS_WITH_OFFSET = /* GraphQL */ `
   }
 `;
 
-/**
- * 全体の一覧用（/posts）
- * → offsetPagination は使わず、first: 100 だけ取得して
- *   Next.js 側でページング＆著者フィルタを行う
- */
-/** トップ一覧 offset ページネーション＋著者フィルタ */
+/** トップ記事一覧（offset ページネーション） */
 export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
-  query PostsWithOffsetPagination(
-    $size: Int!
-    $offset: Int!
-    $authorName: String
-  ) {
+  query PostsWithOffsetPagination($size: Int!, $offset: Int!) {
     posts(
       where: {
         status: PUBLISH
         orderby: { field: DATE, order: DESC }
-        authorName: $authorName
+        offsetPagination: { size: $size, offset: $offset }
       }
-      offsetPagination: { size: $size, offset: $offset }
     ) {
       nodes {
         id
@@ -236,12 +226,35 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
         date
         excerpt
         featuredImage { node { sourceUrl altText } }
+        author { node { name slug } }
       }
       pageInfo { offsetPagination { total } }
     }
   }
 `;
 
+/** ライター用の全件取得（author フィルタは Next 側で） */
+export const POSTS_FOR_AUTHOR_VIEW = /* GraphQL */ `
+  query PostsForAuthorView($first: Int = 100) {
+    posts(
+      first: $first
+      where: {
+        status: PUBLISH
+        orderby: { field: DATE, order: DESC }
+      }
+    ) {
+      nodes {
+        id
+        slug
+        title
+        date
+        excerpt
+        featuredImage { node { sourceUrl altText } }
+        author { node { name slug } }
+      }
+    }
+  }
+`;
 
 /** 指定したスラッグ配列で投稿取得 */
 export const POSTS_BY_SLUGS = /* GraphQL */ `

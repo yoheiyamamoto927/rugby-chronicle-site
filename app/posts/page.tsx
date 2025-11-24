@@ -1,46 +1,47 @@
 // app/posts/page.tsx
 import { gql } from "@/lib/wp";
-import { POSTS_WITH_OFFSET_PAGINATION } from "@/lib/queries";
 import ArticleList from "@/components/ArticleList";
-import type { WPPost } from "@/ts/wp";
+import {
+  POSTS_WITH_OFFSET_PAGINATION,
+  POSTS_FOR_AUTHOR_VIEW,
+} from "@/lib/queries";
 
-type PostWithAuthor = WPPost & {
-  author?: { node?: { name?: string | null; slug?: string | null } | null } | null;
+type SearchParams = {
+  page?: string;
+  author?: string;
 };
 
 export default async function PostsPage({
   searchParams,
 }: {
-  searchParams?: { page?: string; author?: string };
+  searchParams?: SearchParams;
 }) {
-  const page = Math.max(1, Number(searchParams?.page || 1));
+  const page = Number(searchParams?.page || 1);
   const authorSlug = searchParams?.author || null;
 
-  // 一旦まとめて取得（最大 100 件）
-  const data = await gql<{ posts: { nodes: PostWithAuthor[] } }>(
-    POSTS_WITH_OFFSET_PAGINATION,
-    { first: 100 }
-  );
-
-  const allPosts = data?.posts?.nodes ?? [];
-
-  // 著者フィルタ（?author=universis など）
-  const filtered = authorSlug
-    ? allPosts.filter(
-        (p) => p.author?.node?.slug && p.author.node.slug === authorSlug
-      )
-    : allPosts;
-
-  // アプリ側ページング
   const size = 12;
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / size));
-  const currentPage = Math.min(page, totalPages);
-  const start = (currentPage - 1) * size;
-  const pagePosts = filtered.slice(start, start + size);
+
+  let posts: any[] = [];
+  let totalPages = 1;
+
+  if (authorSlug) {
+    // ★ ライター別：GraphQL では全件取って、Next 側で slug で絞る
+    const data = await gql<any>(POSTS_FOR_AUTHOR_VIEW, { first: 100 });
+    const all = data?.posts?.nodes || [];
+    posts = all.filter((p: any) => p.author?.node?.slug === authorSlug);
+    totalPages = 1; // まずは1ページだけ表示
+  } else {
+    // ★ 通常一覧：これまで通り offsetPagination を使う
+    const offset = (page - 1) * size;
+    const data = await gql<any>(POSTS_WITH_OFFSET_PAGINATION, { size, offset });
+    posts = data?.posts?.nodes || [];
+    const total = data?.posts?.pageInfo?.offsetPagination?.total || 0;
+    totalPages = Math.max(1, Math.ceil(total / size));
+  }
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 py-10">
+      {/* タイトル */}
       {authorSlug ? (
         <h1 className="text-2xl font-bold mb-6">
           ライター: {authorSlug} の記事一覧
@@ -49,32 +50,31 @@ export default async function PostsPage({
         <h1 className="text-2xl font-bold mb-6">記事一覧</h1>
       )}
 
-      <ArticleList posts={pagePosts} />
+      {/* 記事リスト */}
+      <ArticleList posts={posts} />
 
-      {/* ページネーション */}
-      <div className="mt-10 flex justify-center gap-4 text-sm">
-        {currentPage > 1 && (
-          <a
-            href={`/posts?page=${currentPage - 1}${
-              authorSlug ? `&author=${authorSlug}` : ""
-            }`}
-            className="px-4 py-2 border rounded hover:bg-neutral-50"
-          >
-            ← 前へ
-          </a>
-        )}
+      {/* ページネーション（ライター別のときはいったん非表示） */}
+      {!authorSlug && totalPages > 1 && (
+        <div className="mt-10 flex justify-center gap-4 text-sm">
+          {page > 1 && (
+            <a
+              href={`/posts?page=${page - 1}`}
+              className="px-4 py-2 border rounded hover:bg-neutral-50"
+            >
+              ← 前へ
+            </a>
+          )}
 
-        {currentPage < totalPages && (
-          <a
-            href={`/posts?page=${currentPage + 1}${
-              authorSlug ? `&author=${authorSlug}` : ""
-            }`}
-            className="px-4 py-2 border rounded hover:bg-neutral-50"
-          >
-            次へ →
-          </a>
-        )}
-      </div>
+          {page < totalPages && (
+            <a
+              href={`/posts?page=${page + 1}`}
+              className="px-4 py-2 border rounded hover:bg-neutral-50"
+            >
+              次へ →
+            </a>
+          )}
+        </div>
+      )}
     </section>
   );
 }
