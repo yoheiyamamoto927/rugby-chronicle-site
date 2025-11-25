@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
             <p>
               運営者：UNIVERSIS
               <br />
-              連絡先：universis.contact@gmail.com（例）
+              連絡先：t.imamoto.universis@gmail.com
             </p>
           </section>
 
