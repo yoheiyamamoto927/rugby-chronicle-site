@@ -123,7 +123,7 @@ export default async function CategoryPage({
   leagueone:
     "リーグワン（Japan Rugby League One）の試合分析・チーム戦術・選手の特徴をわかりやすく解説。ラグビー観戦がより面白くなるデータ分析や試合レビューを通じて、各クラブの強みと課題を深掘りします。",
 
-  overseas:
+  international:
     "海外ラグビー（国際試合・海外クラブ）のレビュー、戦術解説、最新トレンドを日本人にも分かりやすく紹介。世界の強豪チームの特徴やプレースタイルを比較し、日本ラグビーに活かせる視点もまとめています。",
 
   highschool:
