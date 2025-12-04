@@ -348,6 +348,20 @@ export const POSTS_WITH_OFFSET_PAGINATION = /* GraphQL */ `
 `;
 
 /** ★ライター別専用クエリ（今回追加） */
+/** ライター情報（slug 指定） */
+export const AUTHOR_BY_SLUG = /* GraphQL */ `
+  query AuthorBySlug($slug: ID!) {
+    user(id: $slug, idType: SLUG) {
+      id
+      name
+      slug
+      description
+      avatar {
+        url
+      }
+    }
+  }
+`;
 
 
 

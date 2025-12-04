@@ -14,11 +14,19 @@ type PostData = {
     date: string;
     content: string;
     excerpt?: string;
-    author?: { node?: { name?: string; slug?: string } };
+    author?: {
+      node?: {
+        name?: string;
+        slug?: string;
+        description?: string;
+        avatar?: { url?: string };
+      };
+    };
     featuredImage?: { node?: { sourceUrl?: string; altText?: string } };
     categories?: { nodes: { name: string; slug: string }[] };
   } | null;
 };
+
 
 // ★ author.slug → ライター用カテゴリー slug の対応表
 const WRITER_CATEGORY_BY_AUTHOR_SLUG: Record<string, string> = {
@@ -112,6 +120,13 @@ export default async function PostPage({
 
   const authorName = post.author?.node?.name ?? "UNIVERSIS";
   const authorSlug = post.author?.node?.slug ?? "universis";
+    const authorDescription =
+    post.author?.node?.description ??
+    "データと戦術のあいだを翻訳する人。UNIVERSIS／Rugby Analyzer。";
+
+  const authorAvatar =
+    post.author?.node?.avatar?.url ?? "/avatar-writer.png";
+
 
   // ★ ライター用カテゴリー slug
   const writerCategorySlug =
@@ -184,30 +199,31 @@ export default async function PostPage({
           />
 
           {/* ライターカード */}
-          <div className="mt-12 border-t pt-8">
-            <div className="flex items-center gap-4">
-              <img
-                src="/avatar-writer.png"
-                alt="Author"
-                className="h-12 w-12 rounded-full object-cover ring-1 ring-neutral-200"
-              />
-              <div>
-                <Link
-                  href={
-                    writerCategorySlug
-                      ? `/category/${writerCategorySlug}`
-                      : "#"
-                  }
-                  className="hover:underline"
-                >
-                  {authorName}
-                </Link>
-                <p className="text-sm text-neutral-600">
-                  データと戦術のあいだを翻訳する人。UNIVERSIS／Rugby Analyzer。
-                </p>
-              </div>
-            </div>
-          </div>
+<div className="mt-12 border-t pt-8">
+  <div className="flex items-center gap-4">
+    <img
+      src={authorAvatar}
+      alt={authorName}
+      className="h-12 w-12 rounded-full object-cover ring-1 ring-neutral-200"
+    />
+    <div>
+      <Link
+        href={
+          writerCategorySlug
+            ? `/category/${writerCategorySlug}`
+            : "#"
+        }
+        className="hover:underline"
+      >
+        {authorName}
+      </Link>
+      <p className="text-sm text-neutral-600 whitespace-pre-line">
+        {authorDescription}
+      </p>
+    </div>
+  </div>
+</div>
+
         </article>
 
         {/* サイドバー */}
