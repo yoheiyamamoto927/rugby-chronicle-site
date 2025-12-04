@@ -17,10 +17,10 @@ export const revalidate = 0;
 const CURATED_RANKING_SLUGS = [
   // 例：'2025関西大学ラグビー…'などの日本語はNG。必ず「投稿スラッグ（英数字とハイフン）」にしてください。
   '23teikyomeiji',
-  'meijikeio',
-  '25meijikeio',
+  '2025georgiareview',
+  '2025wasedakeio',
   '25wasedaaogaku',
-  '23-24spears',
+  '2025tenrikyosan',
 
   // 必要に応じて追加
 ];
