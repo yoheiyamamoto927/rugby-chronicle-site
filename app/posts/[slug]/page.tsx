@@ -136,16 +136,7 @@ export default async function PostPage({
 
   return (
     <main className="bg-white">
-      {/* アイキャッチ */}
-      {post.featuredImage?.node?.sourceUrl && (
-        <div className="w-full border-b bg-neutral-50">
-          <img
-            src={post.featuredImage.node.sourceUrl!}
-            alt={post.featuredImage.node.altText || post.title}
-            className="mx-auto h-[320px] w-full max-w-5xl object-cover"
-          />
-        </div>
-      )}
+      {/* ↑ここにあったアイキャッチ画像ブロックを削除した */}
 
       {/* 本文＋サイドバー */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-10 sm:px-6 lg:px-8 xl:grid-cols-12">
